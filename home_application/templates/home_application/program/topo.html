@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="app" style="margin: auto; width: 90%; position: relative; left: 5%;">
+    <el-container>
+        <el-header class="header"><p style="font-size: 18px">文件备份系统</p></el-header>
+        <el-container>
+            <el-aside width="200px">
+                <span>业务拓扑：</span>
+                <el-tree :data="topoData" class="tree" :props="defaultProps" node-key="bk_inst_id"
+                         @node-click="topoClick"></el-tree>
+            </el-aside>
+            <el-main>
+                <el-row>
+                    <el-col :span="8">
+                        <div>
+                            <span>主机列表：</span>
+                        </div>
+                        <el-input
+                                type="textarea"
+                                placeholder="未查到ip地址"
+                                v-model="hostArea"
+                                autosize="true"
+                                style="width: 80%"
+                                v-loading="ipLoading">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="8">
+                        <div>
+                            <span>执行路径：</span>
+                        </div>
+                        <el-input
+                                placeholder="请输入路径"
+                                v-model="pathDir"
+                                size="middle"
+                                style="width: 80%">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="8">
+                        <div>
+                            <span>文件后缀：</span>
+                        </div>
+                        <el-input
+                                placeholder="请输入后缀"
+                                v-model="fileTail"
+                                size="middle"
+                                style="width: 80%">
+                        </el-input>
+                    </el-col>
+                </el-row>
+                <div>
+                    <!--                    <el-button type="primary" style="position: fixed; right: 10%; top: 35%">立即搜索</el-button>-->
+                    <el-button type="primary" @click="searchFile">立即搜索</el-button>
+                </div>
+                <div id="table" v-loading="loading"
+                     element-loading-text="文件搜索中"
+                     element-loading-spinner="el-icon-loading"
+                     element-loading-background="rgba(0, 0, 0, 0.8)">
+                    <el-table
+                            :data="fileData"
+                            style="width: 100%">
+                        <el-table-column
+                                prop="sn"
+                                label="序号"
+                                width="120">
+                        </el-table-column>
+                        <el-table-column
+                                prop="ip"
+                                label="ip"
+                                width="150">
+                        </el-table-column>
+                        <el-table-column
+                                prop="file_list"
+                                label="文件列表"
+                                width="360">
+                        </el-table-column>
+                        <el-table-column
+                                prop="number"
+                                label="文件数量"
+                                width="120">
+                        </el-table-column>
+                        <el-table-column
+                                prop="size"
+                                label="文件总大小"
+                                width="120">
+                        </el-table-column>
+                        <el-table-column label="操作">
+                            <template slot-scope="scope">
+                                <el-button type="success" @click="backUp(scope.row)" :loading="backupLoading" :disabled="backupDisabled">
+                                    立即备份
+                                </el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </el-main>
+        </el-container>
+    </el-container>
+
+</div>
+<script>
+    window.onload = function () {
+        new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data() {
+                return {
+                    topoData: [],
+                    defaultProps: {
+                        children: 'children',
+                        label: 'label'
+                    },
+                    hostSpan: '',
+                    hostArea: '',
+                    pathDir: '/tmp',
+                    fileTail: '.log',
+                    fileData: [],
+                    biz_id: 2,
+                    loading: false,
+                    ipLoading: false,
+                    backupLoading: false,
+                    backupDisabled: false
+                }
+            },
+            computed: {},
+            watch: {},
+            created() {
+                this.presentTopo()
+            },
+            mounted() {
+            },
+            methods: {
+                topoClick(data) {
+                    this.ipLoading = true
+                    axios.post('{{ SITE_URL }}get_topo_host/', data).then(res => {
+                        if (res.data.result) {
+                            this.hostArea = res.data.data
+                            console.log(this.hostArea)
+                            this.ipLoading = false
+                        }
+                    })
+                },
+                presentTopo() {
+                    axios.get('{{ SITE_URL }}get_biz_topo/').then(res => {
+                        if (res.data.result === true) {
+                            this.topoData = res.data.data
+                        }
+                    })
+                },
+                searchFile() {
+                    this.loading = true
+                    let params = {
+                        "host": this.hostArea,
+                        "path": this.pathDir,
+                        "tail": this.fileTail,
+                        "biz_id": this.biz_id
+                    }
+                    axios.post(site_url + 'search_file/', params).then(res => {
+                        if (res.data.result) {
+                            this.fileData = res.data.data
+                        }
+                        this.loading = false
+                    }).catch(err => {
+                        this.$message({
+                            message: '路径不合法,请重新输入',
+                            type: 'warning'
+                        })
+                        this.loading = false
+                        this.fileData = []
+                    })
+                },
+                backUp(row) {
+                    this.backupLoading = true
+                    let params = {
+                        "row": row,
+                        "path": this.pathDir,
+                        "ip_list": this.hostArea
+                    }
+                    axios.post(site_url + 'back_up/', params).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '已备份至' + res.data.data,
+                                type: 'success'
+                            })
+                        }
+                        this.backupLoading = false
+                        this.backupDisabled = true
+                    })
+                }
+            }
+        })
+    }
+</script>
+<style>
+</style>
+
+{% endblock %}

@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="app" style="margin: auto; width: 90%; overflow: auto; position: relative; left: 50px">
+    <div>
+        <el-button id="addhost" @click="addHost" type="primary">
+            新增主机
+        </el-button>
+    </div>
+    <div>
+        <el-dialog
+                title="新增服务器"
+                :visible.sync="dialogVisible"
+                width="60%"
+                :before-close="handleClose">
+            <div>
+                <span>选择业务</span>
+                <el-select v-model="biz_id" placeholder="请选择" @change="searchHost">
+                    <el-option
+                            v-for="item in bizList"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id">
+                    </el-option>
+                </el-select>
+            </div>
+            <div>
+                <span>选择主机</span>
+                <el-select v-model="innerip" placeholder="请选择">
+                    <el-option
+                            v-for="item in hostList"
+                            :key="item.innerip"
+                            :label="item.innerip"
+                            :value="item.innerip">
+                    </el-option>
+                </el-select>
+            </div>
+            <span slot="footer" class="dialog-footer">
+                    <el-button @click="dialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="addData">确 定</el-button>
+                </span>
+        </el-dialog>
+    </div>
+    <div id="table">
+        <el-table
+                :data="tableData"
+                style="width: 100%">
+            <el-table-column
+                    prop="ip"
+                    label="主机IP"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="name"
+                    label="主机名称"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="business"
+                    label="所属业务">
+            </el-table-column>
+            <el-table-column
+                    prop="cloud_area"
+                    label="云区域">
+            </el-table-column>
+            <el-table-column
+                    prop="os"
+                    label="操作系统类型">
+            </el-table-column>
+            <el-table-column label="操作" width="300">
+                <template slot-scope="scope">
+                    <el-button type="success" @click="perentData(scope.row)">
+                        查看性能
+                    </el-button>
+                    <!--                    <router-link :to="{ path: '/report'}">-->
+                    <!--                        <el-button type="success">查看性能</el-button>-->
+                    <!--                    </router-link>-->
+                    <el-button type="warning" @click="deleteData(scope.row)">
+                        删除
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+    <div>
+        <el-dialog
+                title="主机性能情况"
+                :visible.sync="chartVisible"
+                width="80%"
+                heigh="80%"
+                :before-close="handleClose"
+        >
+            <div id="chartDemo" style="width: 600px;height:400px;"></div>
+        </el-dialog>
+    </div>
+</div>
+<script>
+    window.onload = function () {
+        new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data() {
+                return {
+                    tableData: [],
+                    dialogVisible: false,
+                    host: "",
+                    bizList: [],
+                    hostList: [],
+                    biz_id: "",
+                    innerip: "",
+                    bizName: "",
+                    chartVisible: false,
+                    direction: "rtl",
+                    hostID: "",
+                    hostSpan: "",
+                }
+            },
+            computed: {},
+            watch: {},
+            created() {
+                this.initTable()
+            },
+            mounted() {
+            },
+            methods: {
+                addHost() {
+                    axios.get(site_url + 'search_biz').then(res => {
+                        this.bizList = res.data.data
+                    })
+                    this.biz_id = ''
+                    this.innerip = ''
+                    this.dialogVisible = true
+                },
+                searchHost() {
+                    let params = {
+                        "biz_id": this.biz_id
+                    }
+                    axios.post(site_url + 'search_host/', params).then(res => {
+                        this.hostList = res.data.data
+                        console.log(this.hostList)
+                    })
+                },
+                addData() {
+                    this.bizName = this.bizList["biz_id"]
+                    let params = {
+                        "innerip": this.innerip,
+                        "biz_name": this.bizList
+                    }
+                    axios.post(site_url + 'add_host/', params).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '添加成功',
+                                type: 'success'
+                            })
+                            this.dialogVisible = false
+                            this.initTable()
+                        } else if (res.data.result === 0) {
+                            this.$message({
+                                message: res.data.data,
+                                type: 'warning'
+                            })
+                        } else {
+                            this.$message({
+                                message: '请勿添加重复主机',
+                                type: 'error'
+                            })
+                        }
+                    })
+                },
+                initTable() {
+                    axios.get('{{ SITE_URL }}init_table/').then(res => {
+                        if (res.data.result === true) {
+                            this.tableData = res.data.data
+                        } else {
+                            this.$message.error("表格生成错误")
+                        }
+                    })
+                },
+                deleteData(row) {
+                    let params = {
+                        "row_id": row.id
+                    }
+                    axios.get(site_url + 'delete_host', {params: params}).then(res => {
+                        if (res.data.result === true) {
+                            this.$message({
+                                message: '删除成功',
+                                type: 'success'
+                            });
+                            this.initTable()
+                        } else {
+                            this.$message.error("删除错误")
+                        }
+                    })
+                },
+                perentData(row) {
+                    this.chartVisible = true
+                    this.presentEchart(row)
+                },
+                reportLink(row) {
+                    this.hostID = row.id
+                    window.location.href = '/report?id=' + this.hostID
+                },
+                handleClose() {
+                    this.dialogVisible = false
+                    this.chartVisible = false
+                },
+                connectBackend() {
+                    $.ajax({
+                        url: site_url + 'connect_bak/',
+                        type: 'GET',
+                        data: {"days":1},
+                        success: function (res) {
+                            this.resData = res.data
+                            {
+                                this.$message('这是一条消息提示')
+                            }
+                        }
+                    })
+                },
+                connectBackend2() {
+                    //需要vue-resource.min.js
+                    //发送get请求
+                    // function (res) 可以改成 res =>
+                    // res数据格式如下:
+                    // data: Object
+                    // url: "/connect_bak"
+                    // ok: true
+                    // status: 200
+                    // statusText: "OK"
+                    // headers: I {map: {…}}
+                    // body: {data: "链接成功"}
+                    // bodyText: "{"data": "\u94fe\u63a5\u6210\u529f"}"
+                    //__proto__: Object
+                    axios.get(site_url + 'connect_bak').then(function (res) {
+                        this.resData = res.data.data
+                        console.log(res)
+                    }, function () {
+                        console.log('请求失败处理')
+                    });
+                },
+                presentEchart(row) {
+                    console.log(document.getElementById("chartDemo"))
+                    let myChart = echarts.init(document.getElementById("chartDemo"));
+
+                    // 指定图表的配置项和数据
+                    let option = {
+                        title: {
+                            text: 'ECharts 入门示例' + toString(row.name)
+                        },
+                        tooltip: {},
+                        legend: {
+                            data: ['销量']
+                        },
+                        xAxis: {
+                            data: ["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"]
+                        },
+                        yAxis: {},
+                        series: [{
+                            name: '销量',
+                            type: 'bar',
+                            data: [5, 20, 36, 10, 10, 20]
+                        }]
+                    };
+
+                    // 使用刚指定的配置项和数据显示图表。
+                    myChart.setOption(option);
+                },
+            }
+        })
+    }
+</script>
+<style>
+    #addhost {
+        float: right;
+        position: relative;
+        right: 50px
+    }
+</style>
+
+{% endblock %}
