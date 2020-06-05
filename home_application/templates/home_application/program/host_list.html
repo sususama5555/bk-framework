@@ -69,12 +69,16 @@
             </el-table-column>
             <el-table-column label="操作" width="300">
                 <template slot-scope="scope">
+                    <!--                    跳转方法1 -> @click绑定方法-->
                     <el-button type="success" @click="perentData(scope.row)">
                         查看性能
                     </el-button>
-                    <!--                    <router-link :to="{ path: '/report'}">-->
-                    <!--                        <el-button type="success">查看性能</el-button>-->
-                    <!--                    </router-link>-->
+                    <!--                    跳转方法2 -> a标签href属性：-->
+                    <!--                    <el-button>-->
+                    <!--                        <el-link :href="'{{SITE_URL}}report/?id='+scope.row.id">-->
+                    <!--                            查看性能-->
+                    <!--                        </el-link>-->
+                    <!--                    </el-button>-->
                     <el-button type="warning" @click="deleteData(scope.row)">
                         删除
                     </el-button>
@@ -193,12 +197,19 @@
                     })
                 },
                 perentData(row) {
-                    this.chartVisible = true
-                    this.presentEchart(row)
+                    this.reportLink(row)
+                    // this.chartVisible = true
+                    // this.presentEchart(row)
+
                 },
                 reportLink(row) {
                     this.hostID = row.id
-                    window.location.href = '/report?id=' + this.hostID
+                    axios.get(site_url + 'report_link/?id=' + row.id).then(res => {
+                        if (res.data.result) {
+                            this.$message("查看主机报告")
+                        }
+                    })
+                    // window.location.href = '/report?id=' + this.hostID
                 },
                 handleClose() {
                     this.dialogVisible = false
@@ -208,7 +219,7 @@
                     $.ajax({
                         url: site_url + 'connect_bak/',
                         type: 'GET',
-                        data: {"days":1},
+                        data: {"days": 1},
                         success: function (res) {
                             this.resData = res.data
                             {

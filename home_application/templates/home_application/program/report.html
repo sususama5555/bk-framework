@@ -2,8 +2,11 @@
 
 {% block content %}
 <div id="app">
+    <div>{{id}}</div>
     <div id="chartDemo" style="width: 600px;height:400px;"></div>
     <el-button type="primary" @click="presentEchart" style="position: relative;float: right;top: -400px">显示表格</el-button>
+    <a href="{{SITE_URL}}api/test/">点我跳转</a>
+    <div>{{testSpan}}xxxxxxxxx</div>
 </div>
 <script>
     new Vue({

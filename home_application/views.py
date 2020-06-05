@@ -26,7 +26,8 @@ def home(request):
 
 
 def report(request):
-    return render(request, 'home_application/program/report.html')
+    id = request.GET.get("id")
+    return render(request, 'home_application/program/report.html', {"id": id})
 
 
 def topo(request):
@@ -47,10 +48,15 @@ def contact(request):
     return render(request, 'home_application/contact.html')
 
 
+def report_link(request):
+    return render(request, 'home_application/program/report.html')
+
+
 # =======================业务代码==========================
 
 def test(request):
-    return JsonResponse({"uesrname": request.user.username, "result": "OK"})
+    # return JsonResponse({"uesrname": request.user.username, "result": "OK"})
+    return render(request, 'home_application/program/report.html', {"testSpan": "我是测试"})
 
 
 def connect_bak(request):
@@ -339,3 +345,12 @@ def back_up(request):
                     log_content.append(tmp["ip_logs"][0]["log_content"])
 
     return JsonResponse({"result": True, "data": ";\n".join(log_content)})
+
+
+def esb_search_biz(request):
+    client = get_client_by_user("admin")
+    kwargs = {
+        "fields": ["bk_biz_id", "bk_biz_name"]
+    }
+    data = client.cc.search_business(**kwargs)
+    return JsonResponse({"data": data})

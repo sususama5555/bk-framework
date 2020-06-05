@@ -12,6 +12,9 @@ urlpatterns = (
     url(r'^contact/$', views.contact),
     url(r'^api/test/$', views.test),
     url(r'^connect_bak/$', views.connect_bak),
+    url(r'^esb_search_biz/$', views.esb_search_biz),
+    # 页面跳转
+    url(r'^report_link/$', views.report_link),
     # 业务urls
     url(r'^get_biz_topo/$', views.get_biz_topo),
     url(r'^get_topo_host/$', views.get_topo_host),

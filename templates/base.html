@@ -28,15 +28,6 @@
     <link rel="stylesheet" href="{{ STATIC_URL }}custom/index.css">
     <script src="{{ STATIC_URL }}custom/echartsFun/index.js"></script>
 
-    <script type="text/javascript">
-        //跨域请求
-        axios.interceptors.request.use(config => {
-            config.headers['X-Requested-With'] = 'XMLHttpRequest';
-            let CSRFTokenLi = document.cookie.split('; ').find(v => v.match(/^csrftoken=([^;.]*).*$/))
-            config.headers['X-CSRFToken'] = CSRFTokenLi ? CSRFTokenLi.split('=')[1] : ''
-            return config;
-        });
-    </script>
     <!--    <script src="https://unpkg.com/vue/dist/vue.js"></script>-->
     <!--    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>-->
     <!-- 引入样式 -->
@@ -80,8 +71,8 @@
             </ul>
             <ul class="nav navbar-nav" style="float:right;">
                 {% block navigation %}
-                <li id="home"><a href="{{ SITE_URL }}"><span>{% trans '主机列表' %}</span></a></li>
-                <li id="topo"><a href="{{ SITE_URL }}topo"><span>{% trans '文件备份' %}</span></a></li>
+                <li id="home"><a href="{{ SITE_URL }}/"><span>{% trans '主机列表' %}</span></a></li>
+                <li id="topo"><a href="{{ SITE_URL }}topo/"><span>{% trans '文件备份' %}</span></a></li>
                 <!--                <li id="guide"><a href="{{ SITE_URL }}dev-guide/"><span>{% trans '开发指引' %}</span></a></li>-->
                 <li id="report"><a href="{{ SITE_URL }}report/"><span>{% trans '主机性能情况' %}</span></a></li>
                 <!--                <li id="contact"><a href="{{ SITE_URL }}contact/"><span>{% trans '联系我们' %}</span></a></li>-->
@@ -156,6 +147,16 @@
 <script src="{{ REMOTE_STATIC_URL }}analysis.js?v={{ STATIC_VERSION }}"></script>
 <script src="{{ STATIC_URL }}account/login.js?v={{ STATIC_VERSION }}"></script>
 <script src="{{ STATIC_URL }}js/csrftoken.js?v={{ STATIC_VERSION }}"></script>
+
+<script type="text/javascript">
+    //跨域请求
+    axios.interceptors.request.use(config => {
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        let CSRFTokenLi = document.cookie.split('; ').find(v => v.match(/^csrftoken=([^;.]*).*$/))
+        config.headers['X-CSRFToken'] = CSRFTokenLi ? CSRFTokenLi.split('=')[1] : ''
+        return config;
+    });
+</script>
 
 
 <script>
