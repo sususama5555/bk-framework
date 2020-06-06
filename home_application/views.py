@@ -10,28 +10,30 @@ from django.template.context import Context
 from blueking.component.shortcuts import get_client_by_user, get_client_by_request
 # 跨域！
 from django.views.decorators.csrf import csrf_exempt
-from django.template import Context, Template
+# from django.template import Context, Template
 
 from .models import HostInfo
+from .models import Template
+from .models import Task
 
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
 # 装饰器引入 from blueapps.account.decorators import login_exempt
 # 页面跳转
-def home(request):
-    """
-    首页
-    """
-    return render(request, 'home_application/program/host_list.html')
-
-
-def report(request):
-    id = request.GET.get("id")
-    return render(request, 'home_application/program/report.html', {"id": id})
-
-
-def topo(request):
-    return render(request, 'home_application/program/topo.html')
+# def home(request):
+#     """
+#     首页
+#     """
+#     return render(request, 'home_application/program/host_list.html')
+#
+#
+# def report(request):
+#     id = request.GET.get("id")
+#     return render(request, 'home_application/program/report.html', {"id": id})
+#
+#
+# def topo(request):
+#     return render(request, 'home_application/program/topo.html')
 
 
 def dev_guide(request):
@@ -153,20 +155,20 @@ def add_host(request):
     return JsonResponse({"result": 1, "data": host_result})
 
 
-def init_table(request):
-    host_data = HostInfo.objects.filter().all()
-    table_data = []
-    for item in host_data:
-        table_data.append({
-            "id": item.id,
-            "ip": item.ip,
-            "name": item.name,
-            "business": item.business,
-            "cloud_area": item.cloud_area,
-            "os": item.os
-        })
-
-    return JsonResponse({"result": True, "data": table_data})
+# def init_table(request):
+#     host_data = HostInfo.objects.filter().all()
+#     table_data = []
+#     for item in host_data:
+#         table_data.append({
+#             "id": item.id,
+#             "ip": item.ip,
+#             "name": item.name,
+#             "business": item.business,
+#             "cloud_area": item.cloud_area,
+#             "os": item.os
+#         })
+#
+#     return JsonResponse({"result": True, "data": table_data})
 
 
 def delete_host(request):
@@ -354,3 +356,148 @@ def esb_search_biz(request):
     }
     data = client.cc.search_business(**kwargs)
     return JsonResponse({"data": data})
+
+
+# 以下是6.6模拟题代码：
+def task(request):
+    """
+    首页
+    """
+    return render(request, 'home_application/exam0606/task.html')
+
+
+def template(request):
+    # id = request.GET.get("id")
+    return render(request, 'home_application/exam0606/template.html')
+
+
+def api_test(request):
+    data = {}
+    if request.GET:
+        a_key = list(request.GET)[0]
+        b_key = list(request.GET)[1]
+        a_value = request.GET.get(a_key)
+        b_value = request.GET.get(b_key)
+        data = {a_key: a_value, b_key: b_value}
+    return JsonResponse({"result": True, "message": "success", "data": data})
+
+
+def init_template(request):
+    biz_list = []
+    client = get_client_by_user('admin')
+    biz_result = client.cc.search_business()
+    for biz in biz_result["data"]["info"]:
+        biz_list.append({"id": biz["bk_biz_id"], "name": biz["bk_biz_name"]})
+
+    return JsonResponse({"data": biz_list})
+
+
+def add_template(request):
+    params = json.loads(request.body)
+    creator = request.user.username
+    Template.objects.create(business=params["biz"], type=params["type"], name=params["name"], creator=creator,
+                            updator="")
+    return JsonResponse({"result": True})
+
+
+def init_table(request):
+    query_data = Template.objects.all()
+    table_data = []
+    sn = 1
+    for item in query_data:
+        table_data.append({
+            "id": item.id,
+            "sn": sn,
+            "name": item.name,
+            "business": item.business,
+            "type": item.type,
+            "creator": item.creator,
+            "create_at": item.create_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "updator": item.updator,
+            "update_at": item.create_at.strftime("%Y-%m-%d %H:%M:%S"),
+        })
+        sn = sn + 1
+
+    return JsonResponse({"result": True, "data": table_data})
+
+
+def delete_template(request):
+    row_id = request.GET["row_id"]
+    Template.objects.get(id=row_id).delete()
+
+    return JsonResponse({"result": True})
+
+
+def edit_template(request):
+    params = json.loads(request.body)
+    data = Template.objects.get(id=params["row_id"])
+    data.type = params["type"]
+    data.name = params["name"]
+    data.business = params["business"]
+    data.updator = request.user.username
+    data.save()
+    return JsonResponse({"result": True})
+
+
+def search_template(request):
+    params = request.GET
+    query_data = Template.objects.all()
+    if params["name"]:
+        query_data = query_data.filter(
+            name__contains=params["name"]
+        )
+    if params["type"]:
+        query_data = query_data.filter(
+            type=params["type"]
+        )
+    if params["biz"]:
+        query_data = query_data.filter(
+            business=params["biz"]
+        )
+    table_data = []
+    sn = 1
+    for item in query_data:
+        table_data.append({
+            "id": item.id,
+            "sn": sn,
+            "name": item.name,
+            "business": item.business,
+            "type": item.type,
+            "creator": item.creator,
+            "create_at": item.create_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "updator": item.updator,
+            "update_at": item.create_at.strftime("%Y-%m-%d %H:%M:%S"),
+        })
+        sn = sn + 1
+
+    return JsonResponse({"result": True, "data": table_data})
+
+
+def add_task(request):
+    params = json.loads(request.body)
+    creator = request.user.username
+    Task.objects.create(business=params["biz"], type=params["type"], name=params["name"], symbol=params["symbol"],
+                        template=params["template"],
+                        creator=creator)
+    return JsonResponse({"result": True})
+
+
+def init_task(request):
+    query_data = Task.objects.all()
+    table_data = []
+    sn = 1
+    for item in query_data:
+        table_data.append({
+            "id": item.id,
+            "sn": sn,
+            "name": item.name,
+            "business": item.business,
+            "type": item.type,
+            "creator": item.creator,
+            "create_at": item.create_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "symbol": item.symbol,
+            "template": item.template,
+        })
+        sn = sn + 1
+
+    return JsonResponse({"result": True, "data": table_data})

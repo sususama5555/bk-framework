@@ -71,10 +71,10 @@
             </ul>
             <ul class="nav navbar-nav" style="float:right;">
                 {% block navigation %}
-                <li id="home"><a href="{{ SITE_URL }}/"><span>{% trans '主机列表' %}</span></a></li>
-                <li id="topo"><a href="{{ SITE_URL }}topo/"><span>{% trans '文件备份' %}</span></a></li>
+                <li id="home"><a href="{{ SITE_URL }}"><span>{% trans '任务中心' %}</span></a></li>
+                <li id="template"><a href="{{ SITE_URL }}template/"><span>{% trans '任务模板' %}</span></a></li>
                 <!--                <li id="guide"><a href="{{ SITE_URL }}dev-guide/"><span>{% trans '开发指引' %}</span></a></li>-->
-                <li id="report"><a href="{{ SITE_URL }}report/"><span>{% trans '主机性能情况' %}</span></a></li>
+<!--                <li id="report"><a href="{{ SITE_URL }}report/"><span>{% trans '主机性能情况' %}</span></a></li>-->
                 <!--                <li id="contact"><a href="{{ SITE_URL }}contact/"><span>{% trans '联系我们' %}</span></a></li>-->
                 <li style='display: {{ IS_DISPLAY_LANGUAGE_CHANGE }};'>
                     <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
@@ -166,8 +166,8 @@
         $('#home').addClass('king-navbar-active');
     else if (relative_path == site_url + "dev-guide/")
         $('#guide').addClass('king-navbar-active');
-    else if (relative_path == site_url + "report/")
-        $('#report').addClass('king-navbar-active');
+    else if (relative_path == site_url + "template/")
+        $('#template').addClass('king-navbar-active');
     else if (relative_path == site_url + "topo/")
         $('#topo').addClass('king-navbar-active');
     else if (relative_path == site_url + "contact/")

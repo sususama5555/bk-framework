@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="app">
+    <div id="table">
+        <el-table
+                :data="taskData"
+                style="width: 100%">
+            <el-table-column
+                    prop="sn"
+                    label="序号"
+                    width="60">
+            </el-table-column>
+            <el-table-column
+                    prop="name"
+                    label="任务名称">
+            </el-table-column>
+            <el-table-column
+                    prop="template"
+                    label="模板名称">
+            </el-table-column>
+            <el-table-column
+                    prop="symbol"
+                    label="操作识别符">
+            </el-table-column>
+            <el-table-column
+                    prop="business"
+                    label="业务名称">
+            </el-table-column>
+            <el-table-column
+                    prop="type"
+                    label="模板类型"
+                    width="160">
+            </el-table-column>
+            <el-table-column
+                    prop="creator"
+                    label="创建者">
+            </el-table-column>
+            <el-table-column
+                    prop="create_at"
+                    label="创建时间"
+                    width="160">
+            </el-table-column>
+            <el-table-column label="操作" width="240">
+                <template slot-scope="scope">
+                    <el-button type="success" icon="el-icon-plus" circle @click="addTask(scope.row)"></el-button>
+                    <el-button type="primary" icon="el-icon-edit" circle @click="editForm(scope.row)"></el-button>
+                    <el-button type="success" icon="el-icon-download" circle
+                               @click="downloadData(scope.row)"></el-button>
+                    <el-button type="danger" icon="el-icon-delete" circle @click="deleteData(scope.row)"></el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+</div>
+<script>
+    window.onload = function () {
+        new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data() {
+                return {
+                    arg: "",
+                    firstData: "",
+                    taskData: "",
+                }
+            },
+            computed: {},
+            watch: {},
+            created() {
+                this.init_table()
+            },
+            mounted() {
+
+            },
+            methods: {
+                init_table() {
+                    axios.get(site_url + 'init_task/').then(res => {
+                        this.taskData = res.data.data
+                    })
+                },
+                // 无用
+                presentFirst() {
+                    let params = {
+                        "id": this.arg
+                    }
+                    axios.get('{{ SITE_URL }}detail_report/', {params: params}).then(res => {
+                        if (res.data.result) {
+                            this.firstData = res.data.data
+                            console.log(res)
+                            this.$message({
+                                message: '数据连接成功',
+                                type: 'success'
+                            })
+                            this.presentEchart()
+                        }
+                    })
+                },
+                presentEchart() {
+                    console.log(document.getElementById("chartDemo"))
+                    let myChart = echarts.init(document.getElementById("chartDemo"));
+
+                    // 指定图表的配置项和数据
+                    let option = this.firstData
+
+                    // 使用刚指定的配置项和数据显示图表。
+                    myChart.setOption(option);
+                },
+            }
+        })
+    }
+
+</script>
+
+{% endblock %}
+

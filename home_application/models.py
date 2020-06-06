@@ -22,3 +22,23 @@ class FileInfo(models.Model):
     done = models.BooleanField(default=False)
 
 
+class Template(models.Model):
+    """模板信息"""
+    business = models.CharField(max_length=64, default="")
+    type = models.CharField(max_length=64, default="")
+    name = models.CharField(max_length=64, default="")
+    creator = models.CharField(max_length=64, default="")
+    updator = models.CharField(max_length=64, default="")
+    create_at = models.DateTimeField(auto_now_add=True)
+    update_at = models.DateTimeField(auto_now=True)
+
+
+class Task(models.Model):
+    """模板信息"""
+    name = models.CharField(max_length=64, default="")
+    type = models.CharField(max_length=64, default="")
+    template = models.CharField(max_length=64, default="")
+    symbol = models.CharField(max_length=64, default="")
+    business = models.CharField(max_length=64, default="")
+    creator = models.CharField(max_length=64, default="")
+    create_at = models.DateTimeField(auto_now_add=True)

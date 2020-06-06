@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="app" style="margin: auto; width: 90%; overflow: auto; position: relative; left: 50px">
+    <div>
+        <span>业务名称：</span>
+        <!--        <el-select v-model="searchByBiz" placeholder="请选择" @change="searchTemplate">-->
+        <el-select v-model="searchByBiz" placeholder="请选择" clearable>
+            <el-option
+                    v-for="item in bizList"
+                    :key="item.name"
+                    :label="item.name"
+                    :value="item.name">
+            </el-option>
+        </el-select>
+        <span>模板类型：</span>
+        <el-select v-model="searchBytype" placeholder="请选择" clearable>
+            <el-option
+                    v-for="item in templateTypeList"
+                    :key="item.label"
+                    :label="item.label"
+                    :value="item.label">
+            </el-option>
+        </el-select>
+        <span>模板名称：</span>
+        <el-input v-model="searchByname" placeholder="名称模糊查询" style="width: 200px"></el-input>
+        <el-button id="search" @click="searchTemplate" type="success">
+            查询
+        </el-button>
+        <el-button id="add" @click="initTemplate" type="primary">
+            添加
+        </el-button>
+    </div>
+    <div>
+        <el-dialog
+                title="新增模板"
+                :visible.sync="dialogVisible"
+                width="60%"
+                :before-close="handleClose">
+            <div>
+                <span>业务名称：</span>
+                <el-select v-model="bizName" placeholder="请选择" clearable>
+                    <el-option
+                            v-for="item in bizList"
+                            :key="item.name"
+                            :label="item.name"
+                            :value="item.name">
+                    </el-option>
+                </el-select>
+            </div>
+            <div>
+                <span>模板类型：</span>
+                <el-select v-model="templateType" placeholder="请选择" clearable>
+                    <el-option
+                            v-for="item in templateTypeList"
+                            :key="item.label"
+                            :label="item.label"
+                            :value="item.label">
+                    </el-option>
+                </el-select>
+            </div>
+            <div>
+                <span>模板名称：</span>
+                <el-input v-model="templateName" placeholder="请输入模板名称" style="width: 200px"></el-input>
+            </div>
+            <div>
+                <span>选择导入模板：</span>
+                <el-button type="primary">上传<i class="el-icon-upload el-icon--right"></i></el-button>
+                <el-button type="success">下载<i class="el-icon-download el-icon--right"></i></el-button>
+            </div>
+            <span slot="footer" class="dialog-footer">
+                    <el-button @click="dialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="addTemplate">确 定</el-button>
+                </span>
+        </el-dialog>
+    </div>
+    <div id="table">
+        <el-table
+                :data="tableData"
+                style="width: 100%">
+            <el-table-column
+                    prop="sn"
+                    label="序号"
+                    width="60">
+            </el-table-column>
+            <el-table-column
+                    prop="name"
+                    label="模板名称">
+            </el-table-column>
+            <el-table-column
+                    prop="business"
+                    label="业务名称">
+            </el-table-column>
+            <el-table-column
+                    prop="type"
+                    label="模板类型">
+            </el-table-column>
+            <el-table-column
+                    prop="creator"
+                    label="创建者">
+            </el-table-column>
+            <el-table-column
+                    prop="create_at"
+                    label="创建时间"
+                    width="160">
+            </el-table-column>
+            <el-table-column
+                    prop="updator"
+                    label="更新人">
+            </el-table-column>
+            <el-table-column
+                    prop="update_at"
+                    label="更新时间"
+                    width="160">
+            </el-table-column>
+            <el-table-column label="操作" width="240">
+                <template slot-scope="scope">
+                    <el-button type="success" icon="el-icon-plus" circle @click="addTask(scope.row)"></el-button>
+                    <el-button type="primary" icon="el-icon-edit" circle @click="editForm(scope.row)"></el-button>
+                    <el-button type="success" icon="el-icon-download" circle
+                               @click="downloadData(scope.row)"></el-button>
+                    <el-button type="danger" icon="el-icon-delete" circle @click="deleteData(scope.row)"></el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+    <div>
+        <el-dialog
+                title="更新模板"
+                :visible.sync="editVisible"
+                width="60%"
+                :before-close="handleClose">
+            <div>
+                <span>业务名称：</span>
+                <el-select v-model="editBiz" placeholder="请选择" @change="searchHost" clearable>
+                    <el-option
+                            v-for="item in bizList"
+                            :key="item.name"
+                            :label="item.name"
+                            :value="item.name">
+                    </el-option>
+                </el-select>
+            </div>
+            <div>
+                <span>模板类型：</span>
+                <el-select v-model="editType" placeholder="请选择" clearable>
+                    <el-option
+                            v-for="item in templateTypeList"
+                            :key="item.label"
+                            :label="item.label"
+                            :value="item.label">
+                    </el-option>
+                </el-select>
+            </div>
+            <div>
+                <span>模板名称：</span>
+                <el-input v-model="editName" placeholder="请输入模板名称"></el-input>
+            </div>
+            <div>
+                <span>选择导入模板：</span>
+                <el-button type="primary">上传<i class="el-icon-upload el-icon--right"></i></el-button>
+                <el-button type="success">下载<i class="el-icon-download el-icon--right"></i></el-button>
+            </div>
+            <span slot="footer" class="dialog-footer">
+                    <el-button @click="editVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="editData">确 定</el-button>
+                </span>
+        </el-dialog>
+    </div>
+    <div>
+        <el-dialog
+                title="添加任务"
+                :visible.sync="taskVisible"
+                width="60%">
+            <div>
+                <span>任务名称：</span>
+                <el-input v-model="taskName" placeholder="请输入任务名称" style="width: 200px"></el-input>
+
+            </div>
+            <div>
+                <span>业务名称：[[taskBiz]]</span>
+            </div>
+            <div>
+                <span>模板类型：[[taskType]]</span>
+
+            </div>
+            <div>
+                <span>模板名称：[[taskTem]]</span>
+            </div>
+            <div>
+                <span>操作识别符：</span>
+                <el-input v-model="taskSymbol" placeholder="请输入操作识别符" style="width: 200px"  ></el-input>
+            </div>
+            <span slot="footer" class="dialog-footer">
+                    <el-button @click="taskVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="pushTask">确 定</el-button>
+                </span>
+        </el-dialog>
+    </div>
+</div>
+<script>
+    window.onload = function () {
+        new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data() {
+                return {
+                    tableData: [],
+                    dialogVisible: false,
+                    editVisible: false,
+                    host: "",
+                    bizList: [],
+                    hostList: [],
+                    biz_id: "",
+                    innerip: "",
+                    bizName: "",
+                    chartVisible: false,
+                    direction: "rtl",
+                    hostID: "",
+                    hostSpan: "",
+                    templateName: "",
+                    templateType: "",
+                    editName: "",
+                    editType: "",
+                    editBiz: "",
+                    templateTypeList: [{
+                        value: '1',
+                        label: '变更发布'
+                    }, {
+                        value: '2',
+                        label: '扩缩容'
+                    }, {
+                        value: '3',
+                        label: '上线类'
+                    }, {
+                        value: '4',
+                        label: '下架类'
+                    }, {
+                        value: '5',
+                        label: '例行维护'
+                    }],
+                    searchByBiz: "",
+                    searchBytype: "",
+                    searchByname: "",
+                    taskVisible: false,
+                    taskSymbol: "",
+                    taskName: "",
+                    taskBiz: "",
+                    taskTem: "",
+                    taskType: "",
+
+                }
+            },
+            computed: {},
+            watch: {},
+            created() {
+                this.getBisness()
+                this.initTable()
+            },
+            mounted() {
+            },
+            methods: {
+                getBisness() {
+                    axios.get(site_url + 'init_template/').then(res => {
+                        this.bizList = res.data.data
+                    })
+                },
+                initTemplate() {
+                    this.getBisness()
+                    this.templateName = ""
+                    this.templateType = ""
+                    this.bizName = ""
+                    this.dialogVisible = true
+                },
+                addTemplate() {
+                    let params = {
+                        "name": this.templateName,
+                        "type": this.templateType,
+                        "biz": this.bizName
+                    }
+                    axios.post(site_url + 'add_template/', params).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '添加成功',
+                                type: 'success'
+                            })
+                            this.initTable()
+                            this.dialogVisible = false
+                        }
+                    })
+                },
+                initTable() {
+                    axios.get('{{ SITE_URL }}init_table/').then(res => {
+                        if (res.data.result) {
+                            this.tableData = res.data.data
+                        } else {
+                            this.$message.error("表格生成错误")
+                        }
+                    })
+                },
+                deleteData(row) {
+                    let params = {
+                        "row_id": row.id
+                    }
+                    axios.get(site_url + 'delete_template/', {params: params}).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '删除成功',
+                                type: 'success'
+                            });
+                            this.initTable()
+                        } else {
+                            this.$message.error("删除错误")
+                        }
+                    })
+                },
+                editForm(row) {
+                    this.editName = row.name
+                    this.editBiz = row.business
+                    this.editType = row.type
+                    this.editVisible = true
+                    this.row_id = row.id
+                },
+                editData() {
+                    let params = {
+                        "row_id": this.row_id,
+                        "name": this.editName,
+                        "type": this.editType,
+                        "business": this.editBiz
+                    }
+                    axios.post(site_url + 'edit_template/', params).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '更新成功',
+                                type: 'success'
+                            });
+                            this.initTable()
+                        } else {
+                            this.$message.error("更新错误")
+                        }
+                        this.editVisible = false
+                    })
+                },
+                downloadData() {
+
+                },
+                searchTemplate() {
+                    let params = {
+                        "biz": this.searchByBiz,
+                        "type": this.searchBytype,
+                        "name": this.searchByname,
+                    }
+                    axios.get(site_url + 'search_template/', {params: params}).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '查询成功',
+                                type: 'success'
+                            })
+                            this.tableData = res.data.data
+                        }
+                    })
+                },
+                addTask(row) {
+                    this.taskTem = row.name
+                    this.taskType = row.type
+                    this.taskBiz = row.business
+                    this.taskVisible = true
+                },
+                pushTask() {
+                    let params = {
+                        "biz": this.taskBiz,
+                        "type": this.taskType,
+                        "template": this.taskTem,
+                        "name": this.taskName,
+                        "symbol": this.taskSymbol
+                    }
+                    axios.post(site_url + 'add_task/', params).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '任务添加成功',
+                                type: 'success'
+                            });
+                        this.taskVisible = false
+                        } else {
+                            this.$message.error("任务添加失败")
+                        }
+                    })
+                },
+                // 其他代码
+                searchHost() {
+                    let params = {
+                        "biz_id": this.biz_id
+                    }
+                    axios.post(site_url + 'search_host/', params).then(res => {
+                        this.hostList = res.data.data
+                        console.log(this.hostList)
+                    })
+                },
+                addData() {
+                    this.bizName = this.bizList["biz_id"]
+                    let params = {
+                        "innerip": this.innerip,
+                        "biz_name": this.bizList
+                    }
+                    axios.post(site_url + 'add_host/', params).then(res => {
+                        if (res.data.result) {
+                            this.$message({
+                                message: '添加成功',
+                                type: 'success'
+                            })
+                            this.dialogVisible = false
+                            this.initTable()
+                        } else if (res.data.result === 0) {
+                            this.$message({
+                                message: res.data.data,
+                                type: 'warning'
+                            })
+                        } else {
+                            this.$message({
+                                message: '请勿添加重复主机',
+                                type: 'error'
+                            })
+                        }
+                    })
+                },
+                perentData(row) {
+                    this.reportLink(row)
+                    // this.chartVisible = true
+                    // this.presentEchart(row)
+
+                },
+                reportLink(row) {
+                    this.hostID = row.id
+                    axios.get(site_url + 'report_link/?id=' + row.id).then(res => {
+                        if (res.data.result) {
+                            this.$message("查看主机报告")
+                        }
+                    })
+                    // window.location.href = '/report?id=' + this.hostID
+                },
+                handleClose() {
+                    this.dialogVisible = false
+                    this.chartVisible = false
+                    this.editVisible = false
+                },
+                connectBackend() {
+                    $.ajax({
+                        url: site_url + 'connect_bak/',
+                        type: 'GET',
+                        data: {"days": 1},
+                        success: function (res) {
+                            this.resData = res.data
+                            {
+                                this.$message('这是一条消息提示')
+                            }
+                        }
+                    })
+                },
+                connectBackend2() {
+                    //需要vue-resource.min.js
+                    //发送get请求
+                    // function (res) 可以改成 res =>
+                    // res数据格式如下:
+                    // data: Object
+                    // url: "/connect_bak"
+                    // ok: true
+                    // status: 200
+                    // statusText: "OK"
+                    // headers: I {map: {…}}
+                    // body: {data: "链接成功"}
+                    // bodyText: "{"data": "\u94fe\u63a5\u6210\u529f"}"
+                    //__proto__: Object
+                    axios.get(site_url + 'connect_bak').then(function (res) {
+                        this.resData = res.data.data
+                        console.log(res)
+                    }, function () {
+                        console.log('请求失败处理')
+                    });
+                },
+                presentEchart(row) {
+                    console.log(document.getElementById("chartDemo"))
+                    let myChart = echarts.init(document.getElementById("chartDemo"));
+
+                    // 指定图表的配置项和数据
+                    let option = {
+                        title: {
+                            text: 'ECharts 入门示例' + toString(row.name)
+                        },
+                        tooltip: {},
+                        legend: {
+                            data: ['销量']
+                        },
+                        xAxis: {
+                            data: ["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"]
+                        },
+                        yAxis: {},
+                        series: [{
+                            name: '销量',
+                            type: 'bar',
+                            data: [5, 20, 36, 10, 10, 20]
+                        }]
+                    };
+
+                    // 使用刚指定的配置项和数据显示图表。
+                    myChart.setOption(option);
+                },
+            }
+        })
+    }
+</script>
+<style>
+    #add {
+        float: right;
+        position: relative;
+    }
+
+    #search {
+        float: right;
+        position: relative;
+        right: 160px
+    }
+</style>
+
+{% endblock %}

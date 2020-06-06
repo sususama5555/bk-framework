@@ -25,8 +25,8 @@ DATABASES.update(
             'ENGINE': 'django.db.backends.mysql',
             'NAME': APP_ID,  # 数据库名
             'USER': 'root',  # 数据库用户
-            'PASSWORD': 'g-e9pmls.H',  # 数据库密码
-            'HOST': '192.168.102.221',  # 数据库主机
+            'PASSWORD': '0N9LZr3ksu',  # 数据库密码
+            'HOST': '192.168.163.5',  # 数据库主机
             'PORT': '3306',  # 数据库端口
         },
     }
