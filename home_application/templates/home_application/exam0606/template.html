@@ -132,7 +132,7 @@
                 :before-close="handleClose">
             <div>
                 <span>业务名称：</span>
-                <el-select v-model="editBiz" placeholder="请选择" @change="searchHost" clearable>
+                <el-select v-model="editBiz" placeholder="请选择" clearable>
                     <el-option
                             v-for="item in bizList"
                             :key="item.name"
@@ -154,7 +154,7 @@
             </div>
             <div>
                 <span>模板名称：</span>
-                <el-input v-model="editName" placeholder="请输入模板名称"></el-input>
+                <el-input v-model="editName" placeholder="请输入模板名称" style="width: 200px"></el-input>
             </div>
             <div>
                 <span>选择导入模板：</span>
