@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+import os
 import copy
 import json
 import base64
+import time
+import datetime
 import requests
 
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.template.context import Context
+from django.utils.encoding import escape_uri_path
+
 from blueking.component.shortcuts import get_client_by_user, get_client_by_request
 # 跨域！
 from django.views.decorators.csrf import csrf_exempt
@@ -15,25 +20,30 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import HostInfo
 from .models import Template
 from .models import Task
+from .models import FileInfo
 
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
 # 装饰器引入 from blueapps.account.decorators import login_exempt
 # 页面跳转
-# def home(request):
-#     """
-#     首页
-#     """
-#     return render(request, 'home_application/program/host_list.html')
-#
-#
-# def report(request):
-#     id = request.GET.get("id")
-#     return render(request, 'home_application/program/report.html', {"id": id})
-#
-#
-# def topo(request):
-#     return render(request, 'home_application/program/topo.html')
+def host_list(request):
+    """
+    首页
+    """
+    return render(request, 'home_application/program/host_list.html')
+
+
+def report(request):
+    id = request.GET.get("id")
+    return render(request, 'home_application/program/report.html', {"id": id})
+
+
+def backup(request):
+    return render(request, 'home_application/program/topo.html')
+
+
+def backup_log(request):
+    return render(request, 'home_application/program/backup_log.html')
 
 
 def dev_guide(request):
@@ -50,8 +60,10 @@ def contact(request):
     return render(request, 'home_application/contact.html')
 
 
+
 def report_link(request):
-    return render(request, 'home_application/program/report.html')
+    id = request.GET.get("id")
+    return render(request, 'home_application/program/report.html', {"id": id})
 
 
 # =======================业务代码==========================
@@ -68,19 +80,20 @@ def connect_bak(request):
 
 
 def get_biz_topo(request):
+    biz_info = request.GET.get("biz", 2)
+    bk_biz_id = biz_info.split(":")[0]
     client = get_client_by_user("admin")
-    topo_data = client.cc.search_biz_inst_topo(**{"bk_biz_id": 2})
+    topo_data = client.cc.search_biz_inst_topo(**{"bk_biz_id": bk_biz_id})
     topo_list = topo_data["data"]
     topo_list_build = str(topo_list).replace("bk_inst_name", "label").replace("child", "children")
     return JsonResponse({"result": True, "data": eval(topo_list_build)})
 
 
 def get_topo_host(request):
+    """根据拓扑节点获取主机"""
     params = json.loads(request.body)
     client = get_client_by_user("admin")
     kwargs = {
-        # 好像不用传biz_id?
-        # "bk_biz_id": 2,
         "condition": [
             {
                 "bk_obj_id": params["bk_obj_id"],
@@ -92,7 +105,7 @@ def get_topo_host(request):
                         "value": params["bk_inst_id"]
                     }
                 ]
-            },
+            }
         ]
     }
     data = client.cc.search_host(**kwargs)
@@ -119,8 +132,7 @@ def search_biz(request):
 @csrf_exempt
 def search_host(request):
     # 查询主机
-    # biz_id = request.GET["biz_id"]
-    biz_id = json.loads(request.body)["biz_id"]
+    biz_id = request.GET["biz"].split(":")[0]
     host_list = []
     client = get_client_by_user('admin')
     params = {
@@ -135,7 +147,9 @@ def search_host(request):
 
 # @csrf_exempt
 def add_host(request):
-    innerip = json.loads(request.body)["innerip"]
+    params = json.loads(request.body)
+    innerip = params["innerip"]
+    business = params["biz"]
     if HostInfo.objects.filter(ip=innerip).exists():
         return JsonResponse({"result": False, "data": "请勿重复添加".format(innerip)})
     client = get_client_by_user('admin')
@@ -150,25 +164,25 @@ def add_host(request):
     host_info = host_result["data"]["info"][0]["host"]
 
     HostInfo.objects.create(ip=host_info["bk_host_innerip"], name=host_info["bk_host_name"],
-                            business=host_info["import_from"], cloud_area=host_info["bk_cloud_id"][0]["bk_inst_name"],
+                            business=business, cloud_area=host_info["bk_cloud_id"][0]["bk_inst_name"],
                             os=host_info["bk_os_name"])
     return JsonResponse({"result": 1, "data": host_result})
 
 
-# def init_table(request):
-#     host_data = HostInfo.objects.filter().all()
-#     table_data = []
-#     for item in host_data:
-#         table_data.append({
-#             "id": item.id,
-#             "ip": item.ip,
-#             "name": item.name,
-#             "business": item.business,
-#             "cloud_area": item.cloud_area,
-#             "os": item.os
-#         })
-#
-#     return JsonResponse({"result": True, "data": table_data})
+def init_host_table(request):
+    host_data = HostInfo.objects.all()
+    table_data = []
+    for item in host_data:
+        table_data.append({
+            "id": item.id,
+            "ip": item.ip,
+            "name": item.name,
+            "business": item.business.split(":")[-1],
+            "cloud_area": item.cloud_area,
+            "os": item.os
+        })
+
+    return JsonResponse({"result": True, "data": table_data})
 
 
 def delete_host(request):
@@ -207,7 +221,7 @@ def search_file(request):
     host_area = json.loads(request.body)["host"]
     file_path = json.loads(request.body)["path"]
     file_tail = json.loads(request.body)["tail"]
-    bk_biz_id = json.loads(request.body)["biz_id"]
+    bk_biz_id = json.loads(request.body).get("biz_id", 2).split(":")[0]
 
     host_list = host_area.split(";\n")
     ip_list = [{"bk_cloud_id": 0, "ip": ip} for ip in host_list]
@@ -261,6 +275,7 @@ def search_file(request):
                 if "No such file or directory" in resu['log_content']:
                     break
                 strs = str(resu['log_content']).split("\n")
+                bk_cloud_id = resu['bk_cloud_id']
                 if strs[0] == '0':
                     break
                 tmp_dict['number'] = strs[0]
@@ -271,46 +286,35 @@ def search_file(request):
                         # string = string + ";" + strs[cnt].split()[1]
                         # 2.文件名:xxxxx
                         string = string + ";" + strs[cnt].split()[-1]
+                    tmp_dict['bk_cloud_id'] = bk_cloud_id
                     tmp_dict['file_list'] = string[1: len(string)]
                     tmp_dict['size'] = strs[len(strs) - 2].split()[0] + "KB"
                     execute_result_info.append(copy.deepcopy(tmp_dict))
                     tmp_dict.clear()
 
-    sn = 1
-    for i in execute_result_info:
-        i["sn"] = sn
-        sn += 1
     return JsonResponse({"result": True, "data": execute_result_info})
 
 
 def back_up(request):
+    """打包备份文件"""
     params = json.loads(request.body)
     # 快速执行脚本的内容
     bk_biz_id = 2
-    backup_dir = "/tmp/test/backup"
-    ip_list = [{"bk_cloud_id": 0, "ip": ip} for ip in params["ip_list"].split(";")]
-    # script = '''#! /bin/bash
-    #    cd {} || return
-    #    t=$(date +%Y%m%d%H%M%S)
-    #    tar -zcf {}/bkds$t.tar.gz  $1
-    #    echo bkds$t.tar.gz '''.format(params["path"], backup_dir)
-    # script = '''
-    # #! /bin/bash
-    # cd {} || return
-    # for i in $1
-    #     t=$($i + %Y%m%d%H%M%S)
-    #     do
-    #         #解压缩
-    #         tar -zxf  $i &> {}
-    #     done'''.format(params["path"], backup_dir)
+    # backup_dir = "/tmp/test/backup" # 可指定备份路径
+    ip_list = [{"bk_cloud_id": params["row"]["bk_cloud_id"], "ip": params["row"]["ip"]}]
     script = '''#! /bin/bash
-    cd {0} || return 
-    t=$(date +%Y%m%d%H%M%S)
-    for i in $1
-    do
-    tar -zcf {1}/$i-$t.tar.gz $i
-    echo $i-$t.tar.gz
-    done'''.format(params["path"], backup_dir)
+       cd {0} || return
+       t=$(date +%Y%m%d%H%M%S)
+       tar -zcf {0}/bkds$t.tar.gz  $1
+       echo bkds$t.tar.gz '''.format(params["path"])
+    # script = '''#! /bin/bash
+    # cd {0} || return
+    # t=$(date +%Y%m%d%H%M%S)
+    # for i in $1
+    # do
+    # tar -zcf {1}/$i-$t.tar.gz $i
+    # echo $i-$t.tar.gz
+    # done'''.format(params["path"], backup_dir)
     encode_str = base64.b64encode(script.encode("utf-8"))
     script_content = str(encode_str, 'utf-8')
 
@@ -346,16 +350,23 @@ def back_up(request):
                 for tmp in re["step_results"]:
                     log_content.append(tmp["ip_logs"][0]["log_content"])
 
-    return JsonResponse({"result": True, "data": ";\n".join(log_content)})
+    back_up_info = FileInfo(
+        ip=params["row"]["ip"],
+        path=params["path"],
+        number=params["row"]["number"],
+        file_list=params["row"]["file_list"],
+        size=params["row"]["size"],
+        creater=request.user.username,
+    )
+    back_up_info.save()
+
+    return JsonResponse({"result": True, "data": "已备份至" + params["path"] + "/" + ";\n".join(log_content)})
 
 
-def esb_search_biz(request):
-    client = get_client_by_user("admin")
-    kwargs = {
-        "fields": ["bk_biz_id", "bk_biz_name"]
-    }
-    data = client.cc.search_business(**kwargs)
-    return JsonResponse({"data": data})
+def get_backup_log_table(request):
+    """获取备份历史表格"""
+    table = [i.to_dict() for i in FileInfo.objects.all()]
+    return JsonResponse({"result": True, "data": table})
 
 
 # 以下是6.6模拟题代码：
@@ -384,7 +395,8 @@ def api_test(request):
 
 def init_template(request):
     biz_list = []
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     biz_result = client.cc.search_business()
     for biz in biz_result["data"]["info"]:
         biz_list.append({"id": biz["bk_biz_id"], "name": biz["bk_biz_name"]})
@@ -403,11 +415,9 @@ def add_template(request):
 def init_table(request):
     query_data = Template.objects.all()
     table_data = []
-    sn = 1
     for item in query_data:
         table_data.append({
             "id": item.id,
-            "sn": sn,
             "name": item.name,
             "business": item.business,
             "type": item.type,
@@ -416,7 +426,6 @@ def init_table(request):
             "updator": item.updator,
             "update_at": item.create_at.strftime("%Y-%m-%d %H:%M:%S"),
         })
-        sn = sn + 1
 
     return JsonResponse({"result": True, "data": table_data})
 
@@ -455,11 +464,9 @@ def search_template(request):
             business=params["biz"]
         )
     table_data = []
-    sn = 1
     for item in query_data:
         table_data.append({
             "id": item.id,
-            "sn": sn,
             "name": item.name,
             "business": item.business,
             "type": item.type,
@@ -468,7 +475,6 @@ def search_template(request):
             "updator": item.updator,
             "update_at": item.create_at.strftime("%Y-%m-%d %H:%M:%S"),
         })
-        sn = sn + 1
 
     return JsonResponse({"result": True, "data": table_data})
 
@@ -485,11 +491,9 @@ def add_task(request):
 def init_task(request):
     query_data = Task.objects.all()
     table_data = []
-    sn = 1
     for item in query_data:
         table_data.append({
             "id": item.id,
-            "sn": sn,
             "name": item.name,
             "business": item.business,
             "type": item.type,
@@ -498,6 +502,42 @@ def init_task(request):
             "symbol": item.symbol,
             "template": item.template,
         })
-        sn = sn + 1
 
     return JsonResponse({"result": True, "data": table_data})
+
+
+def check_upload_wrapper(func):
+    def inner(*args, **kwargs):
+        if not os.path.exists("upload/"):
+            os.makedirs("upload/")
+        return func(*args, **kwargs)
+
+    return inner
+
+
+@csrf_exempt
+@check_upload_wrapper
+def upload_template(request):
+    file_obj = request.FILES.get('file')  # 获取上传的文件对象
+    t = time.strftime('%Y%m%d%H%M%S')
+    now_file_name = t + '.' + file_obj.name.split('.')[-1]  # 得到文件在后台的保存名字
+    file_path = os.path.join('upload', now_file_name)
+    with open(file_path, "wb") as f:
+        for line in file_obj.chunks():
+            f.write(line)
+    return JsonResponse({'result': True, 'data': file_path})
+
+
+def download_template(request):
+    file_name = u"checklist.xls"
+    file_path = os.path.join("upload/sample_temp", file_name)
+    file = open(file_path, 'rb')
+    response = HttpResponse(file)
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = "attachment;filename*=utf-8''{}".format(escape_uri_path(file_name))
+    return response
+
+
+# 备份记录
+def init_backup_log_table(request):
+    FileInfo.objects.get()

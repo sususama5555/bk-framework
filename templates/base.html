@@ -21,6 +21,7 @@
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}open/css/index.css?v={{ STATIC_VERSION }}">
 
     <!--前端VUE改造 -->
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}custom/element.css">
     <script src="{{ STATIC_URL }}custom/vue.min.js"></script>
     <script src="{{ STATIC_URL }}custom/axios.min.js"></script>
     <script src="{{ STATIC_URL }}custom/element.js"></script>
@@ -53,12 +54,12 @@
 <!--顶部导航 Start-->
 <nav class="navbar navbar-default king-horizontal-nav2" role="navigation" style="margin-bottom: 0; border-bottom: 0">
     <div class="container" style="width: 100%;">
-        <div class="navbar-header col-md-6 col-sm-6 col-xs-6 logo">
+        <div class="navbar-header col-md-2 col-sm-2 col-xs-2 logo">
             <a class="navbar-brand" href="{{ SITE_URL }}" style="font-size:24px;padding-top: 15px;color: #438bca;">
                 {% trans '蓝鲸开发框架' %}
             </a>
         </div>
-        <div class="collapse navbar-collapse navbar-responsive-collapse col-md-6 col-sm-6 col-xs-6"
+        <div class="collapse navbar-collapse navbar-responsive-collapse col-md-9 col-sm-9 col-xs-9"
              id="king-example-navbar-collapse-2" style="float:right;">
             <ul class="nav navbar-nav navbar-right">
                   <span class="avatar" style="cursor: default;">
@@ -71,11 +72,14 @@
             </ul>
             <ul class="nav navbar-nav" style="float:right;">
                 {% block navigation %}
-                <li id="home"><a href="{{ SITE_URL }}"><span>{% trans '任务中心' %}</span></a></li>
-                <li id="template"><a href="{{ SITE_URL }}template/"><span>{% trans '任务模板' %}</span></a></li>
-                <!--                <li id="guide"><a href="{{ SITE_URL }}dev-guide/"><span>{% trans '开发指引' %}</span></a></li>-->
-<!--                <li id="report"><a href="{{ SITE_URL }}report/"><span>{% trans '主机性能情况' %}</span></a></li>-->
-                <!--                <li id="contact"><a href="{{ SITE_URL }}contact/"><span>{% trans '联系我们' %}</span></a></li>-->
+                <li id="task"><a href="{{ SITE_URL }}"><span>{% trans '任务中心' %}</span></a></li>
+                <li id="template"><a href="{{ SITE_URL }}temp_center/"><span>{% trans '任务模板' %}</span></a></li>
+                <li id="host"><a href="{{ SITE_URL }}host/"><span>{% trans '监控主机' %}</span></a></li>
+                <li id="backup"><a href="{{ SITE_URL }}backup/"><span>{% trans '文件备份' %}</span></a></li>
+                <li id="backup_log"><a href="{{ SITE_URL }}backup_log/"><span>{% trans '备份历史' %}</span></a></li>
+                <li id="report"><a href="{{ SITE_URL }}report/"><span>{% trans '主机性能情况' %}</span></a></li>
+                <!--                                <li id="guide"><a href="{{ SITE_URL }}dev-guide/"><span>{% trans '开发指引' %}</span></a></li>-->
+                <!--                                <li id="contact"><a href="{{ SITE_URL }}contact/"><span>{% trans '联系我们' %}</span></a></li>-->
                 <li style='display: {{ IS_DISPLAY_LANGUAGE_CHANGE }};'>
                     <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
                         <span>{% trans "语言" %}</span>
@@ -163,13 +167,19 @@
     var relative_path = "{{ APP_PATH }}";
     console.log(relative_path);
     if (relative_path == site_url)
-        $('#home').addClass('king-navbar-active');
+        $('#task').addClass('king-navbar-active');
     else if (relative_path == site_url + "dev-guide/")
         $('#guide').addClass('king-navbar-active');
-    else if (relative_path == site_url + "template/")
+    else if (relative_path == site_url + "temp_center/")
         $('#template').addClass('king-navbar-active');
-    else if (relative_path == site_url + "topo/")
-        $('#topo').addClass('king-navbar-active');
+    else if (relative_path == site_url + "backup/")
+        $('#backup').addClass('king-navbar-active');
+    else if (relative_path == site_url + "backup_log/")
+        $('#backup_log').addClass('king-navbar-active');
+    else if (relative_path == site_url + "host/")
+        $('#host').addClass('king-navbar-active');
+    else if (relative_path == site_url + "report/")
+        $('#report').addClass('king-navbar-active');
     else if (relative_path == site_url + "contact/")
         $('#contact').addClass('king-navbar-active');
 

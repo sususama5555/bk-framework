@@ -3,6 +3,9 @@ from django.db import models
 
 
 # Create your models here.
+from home_application.utils.parse_time import parse_datetime_to_timestr
+
+
 class HostInfo(models.Model):
     """主机信息"""
     ip = models.CharField(max_length=64, default="")
@@ -16,10 +19,22 @@ class FileInfo(models.Model):
     """备份文件信息"""
     ip = models.CharField(max_length=64, default="")
     path = models.CharField(max_length=128, default="")
-    number = models.IntegerField(max_length=32)
+    number = models.IntegerField(blank=True, null=True)
     file_list = models.CharField(max_length=128, default="")
-    size = models.IntegerField(max_length=64)
+    size = models.CharField(max_length=128, default="")
     done = models.BooleanField(default=False)
+    creater = models.CharField(max_length=128, default="")
+    create_time = models.DateTimeField(blank=True, null=True, auto_now_add=True)
+
+    def to_dict(self):
+        return {
+            "ip": self.ip,
+            "file_list": self.file_list,
+            "number": self.number,
+            "size": self.size,
+            "creater": self.creater,
+            "create_time": parse_datetime_to_timestr(self.create_time),
+        }
 
 
 class Template(models.Model):
@@ -34,7 +49,7 @@ class Template(models.Model):
 
 
 class Task(models.Model):
-    """模板信息"""
+    """任务信息"""
     name = models.CharField(max_length=64, default="")
     type = models.CharField(max_length=64, default="")
     template = models.CharField(max_length=64, default="")

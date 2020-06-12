@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block head %}
+	<title>{% trans "任务模板" %}</title>
+	{{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div id="app" style="margin-top: 60px;">
+    <div id="pieInit"  style="width: 700px; height: 300px"></div>
+    <el-row>
+        <el-col :span="20" :offset="2">
+            <el-row :gutter="20">
+                <el-col :span="6">
+                    <el-form label-width="100px">
+                        <el-form-item label="业务名称">
+                            <el-select v-model="searchBkBiz" placeholder="请选择业务" style="width: 100%" clearable>
+                                <el-option v-for="item in bkBizData" :label="item.bk_biz_name" :value="item.bk_biz_name"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-form>
+                </el-col>
+                <el-col :span="6">
+                    <el-form label-width="100px">
+                        <el-form-item label="模板类型">
+                            <el-select v-model="searchTempType" placeholder="请选择模板类型" style="width: 100%" clearable>
+                                <el-option v-for="item in jobTempType" :label="item.key" :value="item.key"></el-option>
+                          </el-select>
+                        </el-form-item>
+                    </el-form>
+                </el-col>
+                <el-col :span="6">
+                    <el-form label-width="100px">
+                        <el-form-item label="模板名称">
+                            <el-input v-model="searchTempName" placeholder="请输入模板名称" clearable></el-input>
+                        </el-form-item>
+                    </el-form>
+                </el-col>
+                <el-col :span="5" :offset="1">
+                    <el-button type="success" @click="getSearch">查询</el-button>
+                    <el-button type="primary" @click="addTempDialog = true">添加</el-button>
+                </el-col>
+            </el-row>
+            <el-table :data="tempData" border style="width: 100%">
+                <el-table-column type="index" label="序号" width="60"></el-table-column>
+                <el-table-column prop="temp_name" label="模型名称"></el-table-column>
+                <el-table-column prop="bk_biz_name" label="业务名称"></el-table-column>
+                <el-table-column prop="temp_type" label="模型类型"></el-table-column>
+                <el-table-column prop="creater" label="创建者" ></el-table-column>
+                <el-table-column prop="create_time" label="创建时间" width="160"></el-table-column>
+                <el-table-column prop="updater" label="更新者"></el-table-column>
+                <el-table-column prop="update_time" label="更新时间" width="160"></el-table-column>
+                <el-table-column label="操作" width="240">
+                    <template slot-scope="scope">
+                        <el-button type="success" icon="el-icon-plus" circle @click="addJobToDo(scope.row)"></el-button>
+                        <el-button type="primary" icon="el-icon-edit" circle @click="editJobTemp(scope.row)"></el-button>
+<!--                        <el-button type="info" icon="el-icon-download" circle @click="downloadTemFile(scope.row)"></el-button>-->
+                        <el-button type="info" icon="el-icon-download" circle @click="downloadTemFile(scope.row)"></el-button>
+                        <el-button type="danger" icon="el-icon-delete" circle @click="deleteJobTemp(scope.row)"></el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-col>
+    </el-row>
+    <el-dialog title="添加模板" :visible.sync="addTempDialog" width="40%">
+        <el-form ref="addForm" :model="addJobTempForm" label-width="100px">
+            <el-form-item label="选择业务">
+                <el-select v-model="addJobTempForm.add_biz_name" placeholder="请选择业务" style="width: 100%">
+                    <el-option v-for="item in bkBizData" :label="item.bk_biz_name" :value="item.bk_biz_name"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="模板类型">
+                <el-select v-model="addJobTempForm.add_temp_type" placeholder="请选择模板类型" style="width: 100%">
+                    <el-option v-for="item in jobTempType" :label="item.key" :value="item.key"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="模板名称">
+                <el-input v-model="addJobTempForm.add_temp_name"></el-input>
+            </el-form-item>
+            <el-form-item label="导入模板">
+                <el-upload
+                        class="upload-demo"
+                        ref="upload"
+                        :data="addJobTempForm"
+                        :action="uploadTempActionUrl"
+                        :on-preview="handlePreview"
+                        :on-remove="handleRemove"
+                        :on-error="handleError"
+                        :on-success="handleSuccess"
+                        :file-list="fileList"
+                        :auto-upload="false"
+                        accept=".xls,.xlsx">
+                    <el-button slot="trigger" size="small" type="primary">选择文件<i class="el-icon-upload el-icon--right"></i></el-button>
+                    <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+                    <el-button style="margin-left: 10px;" size="small" type="success" onclick="window.location.href=site_url+'download_temp_simple/'">模板样例<i class="el-icon-download el-icon--right"></i></el-button>
+                    <!--                    <el-link :href="download_url" target="_blank" id="download">模板样例</el-link>-->
+                </el-upload>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="addTempDialogOk">立即创建</el-button>
+                <el-button @click="addTempDialog = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+    <el-dialog title="更新模板" :visible.sync="editTempDialog" width="40%">
+        <el-form ref="editForm" :model="editJobTempForm" label-width="100px">
+            <el-form-item label="选择业务">
+                <el-select v-model="editJobTempForm.edit_biz_name" placeholder="请选择业务" style="width: 100%">
+                    <el-option v-for="item in bkBizData" :label="item.bk_biz_name" :value="item.bk_biz_name"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="模板类型">
+                <el-select v-model="editJobTempForm.edit_temp_type" placeholder="请选择模板类型" style="width: 100%">
+                    <el-option v-for="item in jobTempType" :label="item.key" :value="item.key"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="模板名称">
+                <el-input v-model="editJobTempForm.edit_temp_name"></el-input>
+            </el-form-item>
+            <el-form-item label="导入模板">
+                <el-upload
+                        class="upload-demo"
+                        ref="upload"
+                        :data="editJobTempForm"
+                        :action="uploadTempActionUrl"
+                        :on-preview="handlePreview"
+                        :on-remove="handleRemove"
+                        :on-error="handleError"
+                        :on-success="handleSuccess"
+                        :file-list="fileList"
+                        :auto-upload="false">
+                    <el-button slot="trigger" size="small" type="primary">选择文件<i class="el-icon-upload el-icon--right"></i></el-button>
+                    <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+                    <el-button style="margin-left: 10px;" size="small" type="success" onclick="window.location.href=site_url+'download_temp_simple/'">模板样例<i class="el-icon-download el-icon--right"></i></el-button>
+<!--                    <el-link :href="download_url" target="_blank" id="download">模板样例</el-link>-->
+                </el-upload>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="editTempDialogOk">保存修改</el-button>
+                <el-button @click="editTempDialog = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+    <el-dialog title="添加任务" :visible.sync="addJobDialog" width="40%">
+        <el-form ref="addForm" :model="addJobToDoForm" label-width="100px">
+            <el-form-item label="任务名称">
+                <el-input v-model="addJobToDoForm.add_job_name"></el-input>
+            </el-form-item>
+            <el-form-item label="选择业务">
+                <el-select v-model="addJobToDoForm.add_biz_name" placeholder="请选择业务" style="width: 100%" disabled>
+                    <el-option v-for="item in bkBizData" :label="item.bk_biz_name" :value="item.bk_biz_name"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="模板类型">
+                <el-select v-model="addJobToDoForm.add_job_type" placeholder="请选择模板类型" style="width: 100%" disabled>
+                    <el-option v-for="item in jobTempType" :label="item.key" :value="item.key"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="模板名称">
+                <el-select v-model="addJobToDoForm.add_temp_name" placeholder="请选择模板" style="width: 100%" disabled>
+                    <el-option v-for="item in tempData" :label="item.temp_name" :value="item.pk +':'+item.temp_name"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="操作识别符">
+                <el-input v-model="addJobToDoForm.add_operate_id"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="addJobToDoDialogOk" :loading="addJobLoading">立即创建</el-button>
+                <el-button @click="addJobDialog = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+</div>
+{% endblock %}
+
+{% block extra_block %}
+<script type="text/javascript">
+    window.onload = function () {
+        new Vue({
+            el: '#app',
+            data: {
+                tempId: '',
+                bkBizData: [],
+                tempData: [],
+                fileList: [],
+                searchBkBiz: '',
+                uploadTempActionUrl: site_url + "upload_job_temp/",
+                download_url: site_url + "download_temp_simple/",
+                searchTempType: '',
+                searchTempName: '',
+                addTempDialog: false,
+                addJobDialog: false,
+                editTempDialog: false,
+                addJobLoading: false,
+                jobTempType: [
+                    {key: "变更发布"},
+                    {key: "扩缩容"},
+                    {key: "上线类"},
+                    {key: "下架类"},
+                    {key: "例行维护"}
+                ],
+                addJobTempForm: {
+                    add_biz_name: '',
+                    add_temp_type: '',
+                    add_temp_name: ''
+                },
+                editJobTempForm: {
+                    edit_biz_name: '',
+                    edit_temp_type: '',
+                    edit_temp_name: ''
+                },
+                addJobToDoForm: {
+                    add_job_name: '',
+                    add_biz_name: '',
+                    add_job_type: '',
+                    add_temp_name: '',
+                    add_operate_id: ''
+                }
+            },
+            mounted() {
+                // 页面加载就获取所有模板
+                this.init();
+                this.echartFunTest()
+            },
+            methods: {
+                init() {
+                    axios.get(site_url + "get_biz_list/").then(res => {
+                        if (res.data.result) {
+                            this.bkBizData = res.data.data;
+                        } else {
+                            this.$message.error('获取业务失败');
+                        }
+                    }, 'json');
+                    this.getSearch()
+                },
+                getSearch() {
+                    const search_params = {
+                        search_biz: this.searchBkBiz, search_type: this.searchTempType, search_name: this.searchTempName
+                    };
+                    axios.get(site_url + "job_temp_view/", {params: search_params}).then(res => {
+                        if (res.data.result) {
+                            this.tempData = res.data.data;
+                            // this.$message.success('获取模板成功');
+                        } else {
+                            this.$message.error('获取模板失败');
+                        }
+                    }, 'json');
+                },
+                editJobTemp(row) {
+                    this.editTempDialog = true;
+                    this.editJobTempForm = {
+                        edit_biz_name: row.bk_biz_name,
+                        edit_temp_type: row.temp_type,
+                        edit_temp_name: row.temp_name
+                    };
+                    this.tempId = row.pk;
+                    this.fileList = row.file_list;
+                    console.log(row.file_list)
+                },
+                addJobToDo(row) {
+                    this.addJobDialog = true;
+                    this.addJobToDoForm = {
+                        add_job_name: '',
+                        add_biz_name: row.bk_biz_name,
+                        add_job_type: row.temp_type,
+                        add_temp_name: row.pk + ':' + row.temp_name,
+                        // add_temp_name: '1111',
+                        add_operate_id: ''
+                    }
+                },
+                submitUpload() {
+                    this.$refs.upload.submit();
+                },
+                handleRemove(file, fileList) {
+                    console.log(file, fileList);
+                },
+                handlePreview(file) {
+                    console.log(file);
+                },
+                handleExceed(files, fileList) {
+                    this.$message.warning(`一次只能上传 1 个文件`);
+                },
+                handleSuccess(res, file, fileList) {
+                    console.log(res.data);
+                    this.$message.success('文件上传成功');
+                    this.fileList = res.data;
+                },
+                beforeRemove(file, fileList) {
+                    return this.$confirm(`正在删除上传文件，是否继续？`);
+                },
+                handleError(file, fileList) {
+                    this.$message.warning(`文件上传失败`);
+                },
+                deleteJobTemp(row) {
+                    this.$confirm('正在删除模板，是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        axios.delete(site_url + 'job_temp_view/', {data: {pk: row.pk}}).then(res => {
+                            if (res.data.result) {
+                                this.$message.success('删除模板成功');
+                                this.getSearch()
+                            } else {
+                                this.$message.error('删除模板失败');
+                            }
+                        }, 'json');
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除'
+                        });
+                    });
+                },
+                downloadTemFile(row) {
+                    if (row.file_list.length) {
+                        window.location.href = site_url + 'download_temp_file/?id=' + row.pk
+                    } else {
+                        this.$message.warning('请先上传文件')
+                    }
+                },
+                addTempDialogOk() {
+                    axios.post(site_url + "job_temp_view/", {
+                        add_form: this.addJobTempForm,
+                        file_list: this.fileList
+                    }).then(res => {
+                        if (res.data.result) {
+                            this.$message.success('添加模板成功');
+                            this.addTempDialog = false;
+                            this.getSearch();
+                            this.fileList = [];
+                            this.addJobTempForm = {
+                                add_biz_name: '',
+                                add_temp_type: '',
+                                add_temp_name: ''
+                            }
+                        } else {
+                            this.$message.error('添加模板失败');
+                        }
+                    }, 'json');
+                },
+                editTempDialogOk() {
+                    params = {
+                        pk: this.tempId,
+                        edit_form: this.editJobTempForm,
+                        file_list: this.fileList,
+                    }
+                    axios.put(site_url + "job_temp_view/", params).then(res => {
+                        if (res.data.result) {
+                            this.$message.success('更新模板成功');
+                            this.editTempDialog = false;
+                            this.getSearch();
+                            this.fileList = []
+                        } else {
+                            this.$message.error('更新模板失败');
+                        }
+                    }, 'json');
+                },
+                addJobToDoDialogOk() {
+                    this.addJobLoading = true;
+                    axios.post(site_url + "job_obj_view/", {add_form: this.addJobToDoForm}).then(res => {
+                        if (res.data.result) {
+                            this.$message.success('添加任务成功');
+                            this.addJobDialog = false;
+                            this.getSearch();
+                            this.addJobToDoForm = {
+                                add_job_name: '',
+                                add_biz_name: '',
+                                add_job_type: '',
+                                add_temp_name: '',
+                                add_operate_id: ''
+                            }
+                        } else {
+                            this.$message.error('添加任务失败');
+                        }
+                        this.addJobLoading = false
+                    }, 'json');
+                },
+                echartFunTest() {
+                    // 饼图
+                    let data = {
+                        element: 'pieInit',
+                        title: 'test',
+                        type:'pie',
+                        data: [
+                            {
+                                name: 'test1',
+                                value: 123,
+                            },
+                            {
+                                name: 'test2',
+                                value: 123,
+                            },
+                            {
+                                name: 'test3',
+                                value: 123,
+                            }
+                        ]
+
+                    }
+                    // element-dev的id、title-图表名称、type-图标类型(line、bar、pie)
+                    // bar、line属性：legendData(图例)、dataX(横坐标)、dataY(纵坐标)
+                    // pie属性：data(饼图数据 -> [{name:名称,value:值,}...])
+                    // let data = {
+                    //     element: 'pieInit',
+                    //     title: 'test',
+                    //     type: 'line',
+                    //     legendData: ["test1", "test2", "test3"],
+                    //     dataX: [2.1, 2.2, 2.3],
+                    //     dataY: [
+                    //         [1223, 233, 4342],
+                    //         [1332, 24, 222],
+                    //         [344, 3432, 333],
+                    //     ]
+                    //
+                    // }
+                    echartFun(data)
+                }
+            }
+        })
+    }
+</script>
+    <style>
+    input[type="file"] {
+        display: none;
+    }
+    #download {
+        margin-left: 50px;
+    }
+</style>
+{% endblock %}

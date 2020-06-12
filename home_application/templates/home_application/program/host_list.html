@@ -3,7 +3,7 @@
 {% block content %}
 <div id="app" style="margin: auto; width: 90%; overflow: auto; position: relative; left: 50px">
     <div>
-        <el-button id="addhost" @click="addHost" type="primary">
+        <el-button id="addhost" @click="addHostDailog" type="primary">
             新增主机
         </el-button>
     </div>
@@ -11,40 +11,40 @@
         <el-dialog
                 title="新增服务器"
                 :visible.sync="dialogVisible"
-                width="60%"
-                :before-close="handleClose">
-            <div>
-                <span>选择业务</span>
-                <el-select v-model="biz_id" placeholder="请选择" @change="searchHost">
-                    <el-option
-                            v-for="item in bizList"
-                            :key="item.id"
-                            :label="item.name"
-                            :value="item.id">
-                    </el-option>
-                </el-select>
-            </div>
-            <div>
-                <span>选择主机</span>
-                <el-select v-model="innerip" placeholder="请选择">
-                    <el-option
-                            v-for="item in hostList"
-                            :key="item.innerip"
-                            :label="item.innerip"
-                            :value="item.innerip">
-                    </el-option>
-                </el-select>
-            </div>
-            <span slot="footer" class="dialog-footer">
+                width="60%">
+            <el-form :model="hostForm">
+                <el-form-item label="选择业务：">
+                    <el-select v-model="hostForm.biz" placeholder="请选择" @change="searchHost">
+                        <el-option
+                                v-for="item in bizList"
+                                :key="item.id"
+                                :label="item.name"
+                                :value="item.id + ':' + item.name">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="选择主机：">
+                    <el-select v-model="hostForm.innerip" placeholder="请选择">
+                        <el-option
+                                v-for="item in hostList"
+                                :key="item.innerip"
+                                :label="item.innerip"
+                                :value="item.innerip">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
                     <el-button @click="dialogVisible = false">取 消</el-button>
                     <el-button type="primary" @click="addData">确 定</el-button>
-                </span>
+                </el-form-item>
+            </el-form>
         </el-dialog>
     </div>
     <div id="table">
         <el-table
                 :data="tableData"
                 style="width: 100%">
+            <el-table-column type="index" label="序号" width="60"></el-table-column>
             <el-table-column
                     prop="ip"
                     label="主机IP"
@@ -70,7 +70,7 @@
             <el-table-column label="操作" width="300">
                 <template slot-scope="scope">
                     <!--                    跳转方法1 -> @click绑定方法-->
-                    <el-button type="success" @click="perentData(scope.row)">
+                    <el-button type="success" @click="window.location.href=site_url+'report/?id='+scope.row.id">
                         查看性能
                     </el-button>
                     <!--                    跳转方法2 -> a标签href属性：-->
@@ -91,9 +91,7 @@
                 title="主机性能情况"
                 :visible.sync="chartVisible"
                 width="80%"
-                heigh="80%"
-                :before-close="handleClose"
-        >
+                heigh="80%">
             <div id="chartDemo" style="width: 600px;height:400px;"></div>
         </el-dialog>
     </div>
@@ -110,9 +108,9 @@
                     host: "",
                     bizList: [],
                     hostList: [],
+                    hostForm: {},
                     biz_id: "",
                     innerip: "",
-                    bizName: "",
                     chartVisible: false,
                     direction: "rtl",
                     hostID: "",
@@ -123,34 +121,32 @@
             watch: {},
             created() {
                 this.initTable()
+                this.getBusiness()
             },
             mounted() {
             },
             methods: {
-                addHost() {
-                    axios.get(site_url + 'search_biz').then(res => {
+                getBusiness() {
+                    axios.get(site_url + 'search_biz/').then(res => {
                         this.bizList = res.data.data
                     })
-                    this.biz_id = ''
-                    this.innerip = ''
+                },
+                addHostDailog() {
+                    this.hostForm = {}
                     this.dialogVisible = true
                 },
                 searchHost() {
+                    console.log(this.hostForm.biz)
                     let params = {
-                        "biz_id": this.biz_id
+                        "biz": this.hostForm.biz
                     }
-                    axios.post(site_url + 'search_host/', params).then(res => {
+                    axios.get(site_url + 'search_host/', {params: params}).then(res => {
                         this.hostList = res.data.data
                         console.log(this.hostList)
                     })
                 },
                 addData() {
-                    this.bizName = this.bizList["biz_id"]
-                    let params = {
-                        "innerip": this.innerip,
-                        "biz_name": this.bizList
-                    }
-                    axios.post(site_url + 'add_host/', params).then(res => {
+                    axios.post(site_url + 'add_host/', this.hostForm).then(res => {
                         if (res.data.result) {
                             this.$message({
                                 message: '添加成功',
@@ -172,7 +168,7 @@
                     })
                 },
                 initTable() {
-                    axios.get('{{ SITE_URL }}init_table/').then(res => {
+                    axios.get('{{ SITE_URL }}init_host_table/').then(res => {
                         if (res.data.result === true) {
                             this.tableData = res.data.data
                         } else {
@@ -184,17 +180,27 @@
                     let params = {
                         "row_id": row.id
                     }
-                    axios.get(site_url + 'delete_host', {params: params}).then(res => {
-                        if (res.data.result === true) {
-                            this.$message({
-                                message: '删除成功',
-                                type: 'success'
-                            });
-                            this.initTable()
-                        } else {
-                            this.$message.error("删除错误")
-                        }
+                    this.$confirm('正在删除主机信息，是否继续?', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.get(site_url + 'delete_host', {params: params}).then(res => {
+                            if (res.data.result === true) {
+                                this.$message({
+                                    message: '删除成功',
+                                    type: 'success'
+                                });
+                                this.initTable()
+                            } else {
+                                this.$message.error("删除错误")
+                            }
+                        })
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除'
+                        })
                     })
+
                 },
                 perentData(row) {
                     this.reportLink(row)
@@ -204,16 +210,12 @@
                 },
                 reportLink(row) {
                     this.hostID = row.id
-                    axios.get(site_url + 'report_link/?id=' + row.id).then(res => {
-                        if (res.data.result) {
-                            this.$message("查看主机报告")
-                        }
-                    })
-                    // window.location.href = '/report?id=' + this.hostID
-                },
-                handleClose() {
-                    this.dialogVisible = false
-                    this.chartVisible = false
+                    // axios.get(site_url + 'report_link/?id=' + row.id).then(res => {
+                    //     if (res.data.result) {
+                    //         this.$message("查看主机报告")
+                    //     }
+                    // })
+                    window.location.href = site_url + 'report/?id=' + this.hostID
                 },
                 connectBackend() {
                     $.ajax({

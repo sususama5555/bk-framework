@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block head %}
+	<title>{% trans "任务中心" %}</title>
+	{{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div id="app" style="margin-top: 60px;">
+    <el-row>
+        <el-col :span="20" :offset="2">
+            <el-row :gutter="40">
+                <el-col :span="8">
+                    <el-form label-width="100px">
+                        <el-form-item label="业务名称">
+                            <el-select v-model="searchBkBiz" placeholder="请选择业务" style="width: 100%">
+                                <el-option v-for="item in bkBizData" :label="item.bk_biz_name" :value="item.bk_biz_name"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="创建人">
+                            <el-select v-model="searchCreater" placeholder="请选择业务" style="width: 100%">
+                                <el-option v-for="item in bkUserData" :label="item.bk_username" :value="item.bk_username"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-form>
+                </el-col>
+                <el-col :span="8">
+                    <el-form label-width="100px">
+                        <el-form-item label="模板类型">
+                            <el-select v-model="searchTempType" placeholder="请选择模板类型" style="width: 100%">
+                                <el-option v-for="item in jobTempType" :label="item.key" :value="item.key"></el-option>
+                          </el-select>
+                        </el-form-item>
+                        <el-form-item label="模板名字">
+                            <el-input v-model="searchContent" placeholder="请输入模板名字"></el-input>
+                        </el-form-item>
+                    </el-form>
+                </el-col>
+                <el-col :span="8">
+                    <el-form label-width="100px">
+                        <el-form-item label="任务状态">
+                            <el-select v-model="searchJobStatus" placeholder="请选择任务状态" style="width: 100%">
+                                <el-option v-for="item in jobStatus" :label="item.key" :value="item.key"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="操作识别号">
+                            <el-input v-model="searchOperateId" placeholder="请输入操作识别号"></el-input>
+                        </el-form-item>
+                    </el-form>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="2" :offset="22">
+                    <el-button type="primary" @click="getSearch">搜索</el-button>
+                </el-col>
+            </el-row>
+            <el-row style="margin-top: 30px;">
+                <el-table :data="jobData" border style="width: 100%">
+                    <el-table-column type="index" label="序号" width="60"></el-table-column>
+                    <el-table-column prop="job_name" label="任务名称"></el-table-column>
+                    <el-table-column prop="temp_name" label="模板名称"></el-table-column>
+                    <el-table-column prop="identifi" label="操作识别号"></el-table-column>
+                    <el-table-column prop="bk_biz_name" label="业务名称"></el-table-column>
+                    <el-table-column prop="job_type" label="模板类型"></el-table-column>
+                    <el-table-column prop="operate" label="可操作者"></el-table-column>
+                    <el-table-column prop="creater" label="创建者"></el-table-column>
+                    <el-table-column prop="create_time" label="创建时间"></el-table-column>
+                    <el-table-column prop="status" label="状态"></el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button v-if="scope.row.status !== '已完成'" @click="handleJobObject(scope.row)" type="warning" size="small">处理</el-button>
+                            <el-button v-if="scope.row.status === '已完成'" @click="handleJobObject(scope.row)" type="success" size="small">查看详情</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-row>
+        </el-col>
+    </el-row>
+    <el-dialog title="任务待办详情" :visible.sync="jobDetailDialog" width="70%">
+        <el-row>
+            <el-col :span="8">
+                任务实例名称：[[ job_obj_name ]]
+            </el-col>
+            <el-col :span="8">
+                模板类型：[[ job_temp_type ]]
+            </el-col>
+            <el-col :span="8">
+                操作识别符：[[ job_identifi ]]
+            </el-col>
+        </el-row>
+        <el-row style="margin-top: 30px;">
+            <el-table :data="jobDetailData" border style="width: 100%">
+                <el-table-column prop="operate" label="操作事项"></el-table-column>
+                <el-table-column prop="note" label="备注"></el-table-column>
+                <el-table-column prop="answer_time" label="完成时间"></el-table-column>
+                <el-table-column prop="creater" label="责任人"></el-table-column>
+                <el-table-column prop="confirmer" label="确认人"></el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-button @click="confirmOperate(scope.row)"
+                                   :type='scope.row.status == "已完成" ? "":"primary"'
+                                   :disabled='scope.row.status == "已完成"'
+                                   size="small">确认完成
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-row>
+    </el-dialog>
+</div>
+{% endblock %}
+
+{% block extra_block %}
+<script type="text/javascript">
+    window.onload = function () {
+        new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data: {
+                bkBizData: [],
+                jobData: [],
+                bkUserData: [],
+                jobDetailData: [],
+                jobTempType: [
+                    {key: "变更发布"},
+                    {key: "扩缩容"},
+                    {key: "上线类"},
+                    {key: "下架类"},
+                    {key: "例行维护"}
+                ],
+                jobStatus: [
+                    {key: "待操作"},
+                    {key: "操作中"},
+                    {key: "已完成"}
+                ],
+                searchTempType: '',
+                searchContent: '',
+                searchJobStatus: '',
+                searchBkBiz: '',
+                searchCreater: '',
+                searchOperateId: '',
+                job_obj_name: '',
+                job_temp_type: '',
+                job_identifi: '',
+                jobDetailDialog: false
+            },
+            computed: {},
+            watch: {
+                //帧听->刷新表格
+                // jobDetailDialog() {
+                //      this.getSearch();
+                // }
+            },
+            create() {},
+            mounted() {
+                // 页面加载就获取所有模板
+                this.init()
+            },
+            methods: {
+                init() {
+                    axios.get(site_url + "get_biz_list/").then(res => {
+                        if (res.data.result) {
+                            this.bkBizData = res.data.data;
+                        } else {
+                            this.$message.error('获取业务失败');
+                        }
+                    }, 'json');
+                    axios.get(site_url + "get_user_list/").then(res => {
+                        if (res.data.result) {
+                            this.bkUserData = res.data.data;
+                        } else {
+                            this.$message.error('获取用户失败');
+                        }
+                    }, 'json');
+                    this.getSearch();
+                },
+                getSearch() {
+                    const search_params = {
+                        search_biz: this.searchBkBiz,
+                        search_temp_type: this.searchTempType,
+                        search_status: this.searchJobStatus,
+                        search_creater: this.searchCreater,
+                        search_name: this.searchContent,
+                        search_operate_id: this.searchOperateId
+                    };
+                    axios.get(site_url + "job_obj_view/", {params: search_params}).then(res => {
+                        if (res.data.result) {
+                            this.jobData = res.data.data;
+                            this.$message.success('获取作业成功');
+                        } else {
+                            this.$message.error('获取作业失败');
+                        }
+                    }, 'json');
+                },
+                handleJobObject(row) {
+                    this.jobDetailDialog = true;
+                    this.job_obj_name = row.job_name;
+                    this.job_temp_type = row.job_type;
+                    this.job_identifi = row.identifi;
+                    axios.get(site_url + "get_job_detail/?job_id=" + row.pk).then(res => {
+                        if (res.data.result) {
+                            this.jobDetailData = res.data.data;
+                        } else {
+                            this.$message.error('获取业务失败');
+                        }
+                    }, 'json');
+                },
+                confirmOperate(row) {
+                    this.$confirm('正在确认任务操作, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        axios.post(site_url + 'confirm_operate/', {id: row.pk}).then(res => {
+                            if (res.data.result) {
+                                this.$message.success('确认任务操作成功');
+                                row.status = "已完成";
+                                row.answer_time = res.data.data.answer_time;
+                                row.confirmer = res.data.data.confirmer;
+                            } else {
+                                this.$message.error('确认任务操作失败');
+                            }
+                        }, 'json');
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消确认操作'
+                        });
+                    });
+                }
+            }
+        })
+    }
+</script>
+{% endblock %}
+
+<style>
+/* table表头及表内数据居中CSS */
+.el-table .cell {
+    text-align: center;
+}
+</style>

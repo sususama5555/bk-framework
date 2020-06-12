@@ -1,36 +1,92 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id="app" style="margin: auto; width: 90%; overflow: auto; position: relative; left: 50px">
-    <div>
-        <span>业务名称：</span>
-        <!--        <el-select v-model="searchByBiz" placeholder="请选择" @change="searchTemplate">-->
-        <el-select v-model="searchByBiz" placeholder="请选择" clearable>
-            <el-option
-                    v-for="item in bizList"
-                    :key="item.name"
-                    :label="item.name"
-                    :value="item.name">
-            </el-option>
-        </el-select>
-        <span>模板类型：</span>
-        <el-select v-model="searchBytype" placeholder="请选择" clearable>
-            <el-option
-                    v-for="item in templateTypeList"
-                    :key="item.label"
-                    :label="item.label"
-                    :value="item.label">
-            </el-option>
-        </el-select>
-        <span>模板名称：</span>
-        <el-input v-model="searchByname" placeholder="名称模糊查询" style="width: 200px"></el-input>
-        <el-button id="search" @click="searchTemplate" type="success">
-            查询
-        </el-button>
-        <el-button id="add" @click="initTemplate" type="primary">
-            添加
-        </el-button>
-    </div>
+<div id="app" style="width: 90%; overflow: auto; position: relative; left: 50px; margin-top: 60px;">
+    <el-container>
+        <el-container>
+            <el-header>
+                <div>
+                    <span>业务名称：</span>
+                    <!--        <el-select v-model="searchByBiz" placeholder="请选择" @change="searchTemplate">-->
+                    <el-select v-model="searchByBiz" placeholder="请选择" clearable>
+                        <el-option
+                                v-for="item in bizList"
+                                :key="item.name"
+                                :label="item.name"
+                                :value="item.id">
+                        </el-option>
+                    </el-select>
+                    <span>模板类型：</span>
+                    <el-select v-model="searchBytype" placeholder="请选择" clearable>
+                        <el-option
+                                v-for="item in templateTypeList"
+                                :key="item.label"
+                                :label="item.label"
+                                :value="item.label">
+                        </el-option>
+                    </el-select>
+                    <span>模板名称：</span>
+                    <el-input v-model="searchByname" placeholder="名称模糊查询" style="width: 200px"></el-input>
+                    <el-button id="search" @click="searchTemplate" type="success">
+                        查询
+                    </el-button>
+                    <el-button id="add" @click="initTemplate" type="primary">
+                        添加
+                    </el-button>
+                </div>
+            </el-header>
+            <el-main>
+                <div id="table">
+                    <el-table :data="tableData" style="width: 100%" border>
+                        <el-table-column type="index" label="序号" width="60"></el-table-column>
+                        <el-table-column
+                                prop="name"
+                                label="模板名称">
+                        </el-table-column>
+                        <el-table-column
+                                prop="business"
+                                label="业务名称">
+                        </el-table-column>
+                        <el-table-column
+                                prop="type"
+                                label="模板类型">
+                        </el-table-column>
+                        <el-table-column
+                                prop="creator"
+                                label="创建者">
+                        </el-table-column>
+                        <el-table-column
+                                prop="create_at"
+                                label="创建时间"
+                                width="160">
+                        </el-table-column>
+                        <el-table-column
+                                prop="updator"
+                                label="更新人">
+                        </el-table-column>
+                        <el-table-column
+                                prop="update_at"
+                                label="更新时间"
+                                width="160">
+                        </el-table-column>
+                        <el-table-column label="操作" width="240">
+                            <template slot-scope="scope">
+                                <el-button type="success" icon="el-icon-plus" circle
+                                           @click="addTask(scope.row)"></el-button>
+                                <el-button type="primary" icon="el-icon-edit" circle
+                                           @click="editForm(scope.row)"></el-button>
+                                <el-button type="success" icon="el-icon-download" circle
+                                           @click="downloadData(scope.row)"></el-button>
+                                <el-button type="danger" icon="el-icon-delete" circle
+                                           @click="deleteData(scope.row)"></el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </el-main>
+            <!--            <el-footer>Footer</el-footer>-->
+        </el-container>
+    </el-container>
     <div>
         <el-dialog
                 title="新增模板"
@@ -65,64 +121,28 @@
             </div>
             <div>
                 <span>选择导入模板：</span>
-                <el-button type="primary">上传<i class="el-icon-upload el-icon--right"></i></el-button>
-                <el-button type="success">下载<i class="el-icon-download el-icon--right"></i></el-button>
+                <el-upload
+                        class="upload-demo"
+                        ref="upload"
+                        :action="uploadUrl"
+                        :file-list="fileList"
+                        :auto-upload="false">
+                    <!--                    <el-button  size="small" type="primary">选取文件</el-button>-->
+                    <el-button slot="trigger" size="small" type="primary">上传文件<i
+                            class="el-icon-upload el-icon--right"></i></el-button>
+                    <!--                    <el-button style="margin-left: 10px;" size="small" type="success">下载样例<i class="el-icon-download el-icon&#45;&#45;right"></i></el-button>-->
+                    <el-button size="small" @click="submitUpload">上传到服务器</el-button>
+                    <el-link :href="downloadUrl" target="_blank" id="download" :underline="false">
+                        <el-button style="margin-left: 10px;" size="small" type="success">下载样例<i
+                                class="el-icon-download el-icon--right"></i></el-button>
+                    </el-link>
+                </el-upload>
             </div>
             <span slot="footer" class="dialog-footer">
                     <el-button @click="dialogVisible = false">取 消</el-button>
                     <el-button type="primary" @click="addTemplate">确 定</el-button>
                 </span>
         </el-dialog>
-    </div>
-    <div id="table">
-        <el-table
-                :data="tableData"
-                style="width: 100%">
-            <el-table-column
-                    prop="sn"
-                    label="序号"
-                    width="60">
-            </el-table-column>
-            <el-table-column
-                    prop="name"
-                    label="模板名称">
-            </el-table-column>
-            <el-table-column
-                    prop="business"
-                    label="业务名称">
-            </el-table-column>
-            <el-table-column
-                    prop="type"
-                    label="模板类型">
-            </el-table-column>
-            <el-table-column
-                    prop="creator"
-                    label="创建者">
-            </el-table-column>
-            <el-table-column
-                    prop="create_at"
-                    label="创建时间"
-                    width="160">
-            </el-table-column>
-            <el-table-column
-                    prop="updator"
-                    label="更新人">
-            </el-table-column>
-            <el-table-column
-                    prop="update_at"
-                    label="更新时间"
-                    width="160">
-            </el-table-column>
-            <el-table-column label="操作" width="240">
-                <template slot-scope="scope">
-                    <el-button type="success" icon="el-icon-plus" circle @click="addTask(scope.row)"></el-button>
-                    <el-button type="primary" icon="el-icon-edit" circle @click="editForm(scope.row)"></el-button>
-                    <el-button type="success" icon="el-icon-download" circle
-                               @click="downloadData(scope.row)"></el-button>
-                    <el-button type="danger" icon="el-icon-delete" circle @click="deleteData(scope.row)"></el-button>
-                </template>
-            </el-table-column>
-        </el-table>
     </div>
     <div>
         <el-dialog
@@ -189,7 +209,7 @@
             </div>
             <div>
                 <span>操作识别符：</span>
-                <el-input v-model="taskSymbol" placeholder="请输入操作识别符" style="width: 200px"  ></el-input>
+                <el-input v-model="taskSymbol" placeholder="请输入操作识别符" style="width: 200px"></el-input>
             </div>
             <span slot="footer" class="dialog-footer">
                     <el-button @click="taskVisible = false">取 消</el-button>
@@ -211,6 +231,7 @@
                     host: "",
                     bizList: [],
                     hostList: [],
+                    fileList: [],
                     biz_id: "",
                     innerip: "",
                     bizName: "",
@@ -248,6 +269,8 @@
                     taskBiz: "",
                     taskTem: "",
                     taskType: "",
+                    uploadUrl: site_url + "upload_template/",
+                    downloadUrl: site_url + "download_template/"
 
                 }
             },
@@ -271,6 +294,9 @@
                     this.templateType = ""
                     this.bizName = ""
                     this.dialogVisible = true
+                },
+                submitUpload() {
+                    this.$refs.upload.submit();
                 },
                 addTemplate() {
                     let params = {
@@ -362,8 +388,8 @@
                 },
                 addTask(row) {
                     this.taskName = "",
-                    this.taskSymbol = "",
-                    this.taskTem = row.name
+                        this.taskSymbol = "",
+                        this.taskTem = row.name
                     this.taskType = row.type
                     this.taskBiz = row.business
                     this.taskVisible = true
@@ -382,7 +408,7 @@
                                 message: '任务添加成功',
                                 type: 'success'
                             });
-                        this.taskVisible = false
+                            this.taskVisible = false
                         } else {
                             this.$message.error("任务添加失败")
                         }
@@ -520,6 +546,10 @@
         float: right;
         position: relative;
         right: 160px
+    }
+
+    input[type="file"] {
+        display: none;
     }
 </style>
 

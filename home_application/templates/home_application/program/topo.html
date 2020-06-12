@@ -1,14 +1,29 @@
 {% extends "base.html" %}
+{% load i18n %}
+{% block head %}
+<title>{% trans "文件备份" %}</title>
+{{ block.super }}
+{% endblock %}
 
 {% block content %}
 <div id="app" style="margin: auto; width: 90%; position: relative; left: 5%;">
     <el-container>
-        <el-header class="header"><p style="font-size: 18px">文件备份系统</p></el-header>
+        <el-header class="header"></el-header>
         <el-container>
-            <el-aside width="200px">
-                <span>业务拓扑：</span>
-                <el-tree :data="topoData" class="tree" :props="defaultProps" node-key="bk_inst_id"
-                         @node-click="topoClick"></el-tree>
+            <el-aside width="300px">
+                <el-form ref="addForm" :model="topoForm" label-width="100px">
+                    <el-form-item label="任务名称：">
+                        <el-select v-model="topoForm.biz" placeholder="请选择业务" style="width: 100%"
+                                   @change="presentTopo(topoForm)">
+                            <el-option v-for="item in bkBizData" :label="item.bk_biz_name"
+                                       :value="item.bk_biz_id + ':' + item.bk_biz_name"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="业务拓扑：">
+                        <el-tree :data="topoData" class="tree" node-key="bk_inst_id"
+                                 @node-click="topoClick"></el-tree>
+                    </el-form-item>
+                </el-form>
             </el-aside>
             <el-main>
                 <el-row>
@@ -59,11 +74,7 @@
                     <el-table
                             :data="fileData"
                             style="width: 100%">
-                        <el-table-column
-                                prop="sn"
-                                label="序号"
-                                width="120">
-                        </el-table-column>
+                        <el-table-column type="index" label="序号" width="60"></el-table-column>
                         <el-table-column
                                 prop="ip"
                                 label="ip"
@@ -86,7 +97,7 @@
                         </el-table-column>
                         <el-table-column label="操作">
                             <template slot-scope="scope">
-                                <el-button type="success" @click="backUp(scope.row)" :loading="backupLoading" :disabled="backupDisabled">
+                                <el-button type="success" @click="backUp(scope.row)" :loading="backupLoading">
                                     立即备份
                                 </el-button>
                             </template>
@@ -110,26 +121,33 @@
                         children: 'children',
                         label: 'label'
                     },
+                    topoForm: {},
                     hostSpan: '',
                     hostArea: '',
-                    pathDir: '/tmp',
+                    pathDir: '/tmp/test',
                     fileTail: '.log',
                     fileData: [],
-                    biz_id: 2,
+                    bkBizData: [],
                     loading: false,
                     ipLoading: false,
                     backupLoading: false,
-                    backupDisabled: false
                 }
             },
             computed: {},
             watch: {},
             created() {
-                this.presentTopo()
+                this.getBisiness()
             },
             mounted() {
             },
             methods: {
+                getBisiness() {
+                    axios.get(site_url + 'get_biz_list/').then(res => {
+                        if (res.data.result) {
+                            this.bkBizData = res.data.data
+                        }
+                    })
+                },
                 topoClick(data) {
                     this.ipLoading = true
                     axios.post('{{ SITE_URL }}get_topo_host/', data).then(res => {
@@ -140,8 +158,8 @@
                         }
                     })
                 },
-                presentTopo() {
-                    axios.get('{{ SITE_URL }}get_biz_topo/').then(res => {
+                presentTopo(topoForm) {
+                    axios.get('{{ SITE_URL }}get_biz_topo/', {params: topoForm}).then(res => {
                         if (res.data.result === true) {
                             this.topoData = res.data.data
                         }
@@ -153,7 +171,7 @@
                         "host": this.hostArea,
                         "path": this.pathDir,
                         "tail": this.fileTail,
-                        "biz_id": this.biz_id
+                        "biz_id": this.topoForm.biz
                     }
                     axios.post(site_url + 'search_file/', params).then(res => {
                         if (res.data.result) {
@@ -161,10 +179,7 @@
                         }
                         this.loading = false
                     }).catch(err => {
-                        this.$message({
-                            message: '路径不合法,请重新输入',
-                            type: 'warning'
-                        })
+                        this.$message.warning('路径不合法,请重新输入')
                         this.loading = false
                         this.fileData = []
                     })
@@ -178,13 +193,10 @@
                     }
                     axios.post(site_url + 'back_up/', params).then(res => {
                         if (res.data.result) {
-                            this.$message({
-                                message: '已备份至' + res.data.data,
-                                type: 'success'
-                            })
+                            this.$message.success(res.data.data)
+                        } else {
+                            this.backupLoading = false
                         }
-                        this.backupLoading = false
-                        this.backupDisabled = true
                     })
                 }
             }
