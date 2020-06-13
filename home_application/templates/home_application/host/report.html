@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block head %}
+<title>{% trans "主机状态" %}</title>
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div id="app" style="margin-top: 60px;margin-left: 300px">
+    <el-form label-width="100px">
+        <el-form-item label="选择主机：">
+            <el-select v-model="hostIp" placeholder="请选择主机" style="width: 40%" clearable>
+                <el-option v-for="item in hostList" :label="item.ip" :value="item.ip"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="getHostchart">查看监控数据</el-button>
+        </el-form-item>
+        <el-form-item label="主机性能(CPU、内存、磁盘使用率)：">
+            <div id="chartLine" style="width: 1000px; height: 500px"></div>
+        </el-form-item>
+    </el-form>
+
+</div>
+<script>
+     window.onload = function () {
+         new Vue({
+             delimiters: ['[[', ']]'],
+             el: '#app',
+             data() {
+                 return {
+                     arg: "",
+                     firstData: "",
+                     hostList: [],
+                     hostIp: "",
+                 }
+             },
+             computed: {},
+             watch: {},
+             created() {
+             },
+             mounted() {
+                 // let url = decodeURI(window.location.href);
+                 // // 参数id
+                 // let argsIndex = url.split("?id=");
+                 // this.arg = argsIndex[1]
+                 this.getHostList()
+             },
+             methods: {
+                 getHostList() {
+                     axios.get(site_url + 'get_host_list/').then(res => {
+                         this.hostList = res.data.data
+                     })
+                 },
+                 getHostchart() {
+                     let params = {
+                         "ip": this.hostIp
+                     }
+                     axios.get(site_url + 'get_host_monitor_info/', {params: params}).then(res => {
+                         if (res.data.result) {
+                             this.dataX = res.data.dataX
+                             this.dataY = res.data.dataY
+                             this.echartFunHost(this.dataX, this.dataY)
+                             this.$message({
+                                 message: '查询信息成功',
+                                 type: 'success'
+                             })
+                         } else {
+                            this.$message({
+                                 message: res.data.message,
+                                 type: 'error'
+                             })
+                         }
+
+                     })
+                 },
+                 echartFunHost(dataX, dataY) {
+                     // 饼图
+                     // let data = {
+                     //     element: 'pieInit',
+                     //     title: 'test',
+                     //     type: 'pie',
+                     //     data: [
+                     //         {
+                     //             name: 'test1',
+                     //             value: 123,
+                     //         },
+                     //         {
+                     //             name: 'test2',
+                     //             value: 123,
+                     //         },
+                     //         {
+                     //             name: 'test3',
+                     //             value: 123,
+                     //         }
+                     //     ]
+                     //
+                     // }
+                     // element-dev的id、title-图表名称、type-图标类型(line、bar、pie)
+                     // bar、line属性：legendData(图例)、dataX(横坐标)、dataY(纵坐标)
+                     // pie属性：data(饼图数据 -> [{name:名称,value:值,}...])
+                     console.log(dataX)
+                     console.log(dataY)
+                     let data = {
+                         element: 'chartLine',
+                         title: this.hostIp + '--' + '主机性能状态',
+                         type: 'line',
+                         legendData: ["Mem(%)", "Cpu(%)", "Disk(%)"],
+                         dataX: dataX,
+                         dataY: dataY
+                     }
+                     echartFun(data)
+                 },
+                 presentEchart() {
+                     console.log(document.getElementById("chartDemo"))
+                     let myChart = echarts.init(document.getElementById("chartDemo"));
+
+                     // 指定图表的配置项和数据
+                     let option = this.firstData
+
+                     // 使用刚指定的配置项和数据显示图表。
+                     myChart.setOption(option);
+                 },
+             }
+         })
+
+     }
+</script>
+
+{% endblock %}
+
