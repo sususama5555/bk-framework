@@ -17,7 +17,7 @@ from blueking.component.shortcuts import get_client_by_user, get_client_by_reque
 from django.views.decorators.csrf import csrf_exempt
 # from django.template import Context, Template
 
-from .models import HostInfo
+from .host_and_monitor.models import HostInfo
 from .models import Template
 from .models import Task
 from .models import FileInfo
@@ -30,12 +30,12 @@ def host_list(request):
     """
     首页
     """
-    return render(request, 'home_application/program/host_list.html')
+    return render(request, 'home_application/host_and_monitor/host_list.html')
 
 
 def report(request):
     id = request.GET.get("id")
-    return render(request, 'home_application/program/report.html', {"id": id})
+    return render(request, 'home_application/host_and_monitor/report.html', {"id": id})
 
 
 def backup(request):
@@ -129,7 +129,7 @@ def search_biz(request):
     return JsonResponse({"data": biz_list})
 
 
-@csrf_exempt
+
 def search_host(request):
     # 查询主机
     biz_id = request.GET["biz"].split(":")[0]

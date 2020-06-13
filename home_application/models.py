@@ -4,16 +4,7 @@ from django.db import models
 
 # Create your models here.
 from home_application.utils.parse_time import parse_datetime_to_timestr
-
-
-class HostInfo(models.Model):
-    """主机信息"""
-    ip = models.CharField(max_length=64, default="")
-    name = models.CharField(max_length=64, default="")
-    business = models.CharField(max_length=64, default="")
-    cloud_area = models.CharField(max_length=64, default="")
-    os = models.CharField(max_length=64, default="")
-
+from .host_and_monitor.models import HostInfo
 
 class FileInfo(models.Model):
     """备份文件信息"""
