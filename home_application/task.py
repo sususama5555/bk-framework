@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+celery 任务示例
+
+本地启动celery命令: python  manage.py  celery  worker  --settings=settings
+周期性任务还需要启动celery调度命令：python  manage.py  celerybeat --settings=settings
+
+pycharm配置
+celery worker -l info
+celery beat -l info
+"""
 import json
 import datetime
 import base64
@@ -12,6 +22,8 @@ from blueking.component.shortcuts import get_client_by_user
 def get_loadreport():
     client = get_client_by_user('admin')
     script = "cat /proc/loadavg"
+    # 1.63 0.61 0.22 1/228 2487
+    # 1.63（1分钟平均负载） 0.61（5分钟平均负载） 0.22（15分钟平均负载） 1/228（分子是当前正在运行的进程数，分母是总的进程数） 2487（最近运行进程的ID）
     params = {
         "bk_biz_id": 2,
         "script_content": str(base64.b64encode(script.encode("utf-8"))),

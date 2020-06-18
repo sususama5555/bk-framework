@@ -43,3 +43,11 @@ class hostMonitor(models.Model):
     disk = models.CharField(max_length=64, default="")
     mem = models.CharField(max_length=64, default="")
     monitor_time = models.DateTimeField(auto_now_add=True)
+
+    def to_dict(self):
+        return {
+            "cpu": float(self.cpu.split("%")[0]),
+            "disk": float(self.disk.split("%")[0]),
+            "mem": float(self.mem.split("%")[0]),
+            "monitor_time": parse_datetime_to_timestr(self.monitor_time)
+        }

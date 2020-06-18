@@ -18,11 +18,11 @@ from home_application.utils.parse_time import get_current_timestr
 
 
 def job_center_html(request):
-    return render(request, 'home_application/demo/task_center.html')
+    return render(request, 'home_application/task_and_temp/task_center.html')
 
 
 def job_temp_html(request):
-    return render(request, 'home_application/demo/temp_center.html')
+    return render(request, 'home_application/task_and_temp/temp_center.html')
 
 
 def check_upload_wrapper(func):

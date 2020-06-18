@@ -27,16 +27,17 @@ from ..host_and_monitor.models import HostInfo, hostMonitor
 
 logger = logging.getLogger('celery')
 
+
 def host_list(request):
     """
     首页
     """
-    return render(request, 'home_application/host/host_list.html')
+    return render(request, 'home_application/host_and_monitor/host_list.html')
 
 
 def report(request):
     id = request.GET.get("id")
-    return render(request, 'home_application/host/report.html', {"id": id})
+    return render(request, 'home_application/host_and_monitor/report.html', {"id": id})
 
 
 def api_test(request):
@@ -211,32 +212,30 @@ def get_host_monitor_info(request):
     ip = request.GET["ip"]
     if not ip:
         return JsonResponse({"result": False, "message": "请选择ip地址！"})
-    # try:
-    #     monitor_data = hostMonitor.objects.filter(ip=ip)
-    #     data_time = []
-    #     data_mem = []
-    #     data_cpu = []
-    #     data_disk = []
-    #     for item in monitor_data:
-    #         data_time.append(item.monitor_time)
-    #         data_mem.append(int(item.mem))
-    #         data_cpu.append(int(item.cpu))
-    #         data_disk.append(int(item.disk))
-    #
-    #     data_Y = [data_mem, data_cpu, data_disk]
-    # except:
-    data_time = [(datetime.datetime.today() - datetime.timedelta(hours=1) + datetime.timedelta(minutes=min)).strftime(
-        "%Y-%m-%d %H:%M:%S") for min in range(60)]
-    data_mem = [random.randint(11, 83) for i in range(60)]
-    data_cpu = [random.randint(11, 22) for i in range(60)]
-    data_disk = [random.randint(55, 60) for i in range(60)]
-    data_Y = [data_mem, data_cpu, data_disk]
+    try:
+        monitor_data = hostMonitor.objects.filter(ip=ip)
+        data_time = []
+        data_mem = []
+        data_cpu = []
+        data_disk = []
+        for item in monitor_data:
+            data_time.append(item.to_dict().get("monitor_time"))
+            data_mem.append(item.to_dict().get("mem"))
+            data_cpu.append(item.to_dict().get("cpu"))
+            data_disk.append(item.to_dict().get("disk"))
+
+        data_Y = [data_mem, data_cpu, data_disk]
+    except:
+        data_time = [(datetime.datetime.today() - datetime.timedelta(hours=1) + datetime.timedelta(minutes=min)).strftime(
+            "%Y-%m-%d %H:%M:%S") for min in range(60)]
+        data_mem = [random.randint(11, 83) for i in range(60)]
+        data_cpu = [random.randint(11, 22) for i in range(60)]
+        data_disk = [random.randint(55, 60) for i in range(60)]
+        data_Y = [data_mem, data_cpu, data_disk]
     return JsonResponse({"result": True, "dataX": data_time, "dataY": data_Y})
 
 
-
-
-
+# 蓝鲸监控
 def get_monitor_data(biz_id,
              func,
              metric_type,
@@ -308,61 +307,3 @@ def get_monitor_data(biz_id,
             return result_list
         except Exception as _:
             return []
-
-
-
-def check_upload_wrapper(func):
-    def inner(*args, **kwargs):
-        if not os.path.exists("upload/"):
-            os.makedirs("upload/")
-        return func(*args, **kwargs)
-
-    return inner
-
-
-@csrf_exempt
-@check_upload_wrapper  # 装饰器，检查后台是否有`upload/`目录，如果没有则创建
-def upload_job_temp(request):
-    file_obj = request.FILES.get('file')  # 获取上传的文件对象
-    t = time.strftime('%Y%m%d%H%M%S')
-    now_file_name = t + '.' + file_obj.name.split('.')[-1]  # 得到文件在后台的保存名字
-    file_path = os.path.join('upload', now_file_name)
-    with open(file_path, "wb") as f:
-        for line in file_obj.chunks():
-            f.write(line)
-
-    return JsonResponse({'result': True, 'data': [{"name": file_obj.name, "url": file_path}]})  # 必须要返回文件保存路径
-
-
-def download_temp_simple(request):
-    file_name = u"checklist.xls"
-    file_path = os.path.join("upload/sample_temp", file_name)
-    file = open(file_path, 'rb')
-    response = HttpResponse(file)
-    response['Content-Type'] = 'application/octet-stream'
-    response['Content-Disposition'] = "attachment;filename*=utf-8''{}".format(escape_uri_path(file_name))
-    return response
-
-
-def download_temp_file(request):
-    """中文名文件下载(编码问题)"""
-    temp_id = request.GET.get("id")
-    temp_obj = JobTemplate.objects.get(pk=temp_id)
-    file = open(eval(temp_obj.file_path)[0].get("url"), 'rb')
-    file_name = eval(temp_obj.file_path)[0].get("name")
-    response = HttpResponse(file)
-    response["Content-Type"] = "application/octet-stream"
-    response["Content-Disposition"] = "attachment;filename*=UTF-8''{}".format(escape_uri_path(file_name))
-    return response
-
-    # """英文名文件下载"""
-    # temp_id = request.GET.get("id")
-    # temp_obj = JobTemplate.objects.get(pk=temp_id)
-    # file = open(eval(temp_obj.file_path)[0].get("url"), 'rb')
-    # file_name = eval(temp_obj.file_path)[0].get("name")
-    # response = HttpResponse(file)
-    # response['Content-Type'] = 'application/octet-stream'
-    # response['Content-Disposition'] = 'attachment;filename="{}"'.format(file_name)
-    # return response
-
-

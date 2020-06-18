@@ -39,11 +39,11 @@ def report(request):
 
 
 def backup(request):
-    return render(request, 'home_application/program/topo.html')
+    return render(request, 'home_application/backup_and_log/topo.html')
 
 
 def backup_log(request):
-    return render(request, 'home_application/program/backup_log.html')
+    return render(request, 'home_application/backup_and_log/backup_log.html')
 
 
 def dev_guide(request):

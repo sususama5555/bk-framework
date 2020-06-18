@@ -7,135 +7,131 @@
 
 {% block content %}
 <div id="app" style="margin-top: 60px;">
-    <div>
-        <el-button id="addhost" @click="addHostDailog" type="primary">
-            新增主机
-        </el-button>
-    </div>
-    <div>
-        <el-dialog
-                title="新增主机"
-                :visible.sync="dialogVisible"
-                width="60%">
-            <el-form :model="hostForm">
-                <el-form-item label="选择业务：">
-                    <el-select v-model="hostForm.biz" placeholder="请选择" @change="searchSet">
-                        <el-option
-                                v-for="item in bizList"
-                                :label="item.name"
-                                :value="item.id + ':' + item.name">
-                        </el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="选择集群：">
-                    <el-select v-model="hostForm.set" placeholder="请选择" @change="searchHost">
-                        <el-option
-                                v-for="item in setList"
-                                :label="item.bk_set_name"
-                                :value="item.bk_set_id + ':' + item.bk_set_name">
-                        </el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="选择主机：">
-                    <el-select v-model="hostForm.innerip" placeholder="请选择">
-                        <el-option
-                                v-for="item in hostList"
-                                :label="item.innerip"
-                                :value="item.innerip">
-                        </el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item>
-                    <el-button @click="dialogVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="addData">确 定</el-button>
-                </el-form-item>
-            </el-form>
-        </el-dialog>
-    </div>
-    <el-form label-width="100px" v-model="searchHostForm">
-        <el-form-item label="选择业务：">
-            <el-select v-model="searchHostForm.biz" placeholder="请选择业务" style="width: 20%" clearable>
-                <el-option v-for="item in bizList" :label="item.name" :value="item.id + ':' +item.name"></el-option>
-            </el-select>
-        </el-form-item>
-    </el-form>
-    <el-form label-width="100px">
-        <el-form-item label="主机列表：">
-            <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 6 }"
-                      style="width: 40%"
-                      v-model="searchHostForm.ip" placeholder="请输入主机IP(以分号隔开)：" clearable></el-input>
-        </el-form-item>
-    </el-form>
-    <el-button type="success" @click="getSearch">查询</el-button>
-    <div id="table">
-        <el-table
-                :data="tableData"
-                style="width: 100%"
-        border>
-            <el-table-column type="index" label="序号" width="60"></el-table-column>
-            <el-table-column
-                    prop="ip"
-                    label="主机IP"
-                    width="180">
-            </el-table-column>
-            <el-table-column
-                    prop="os"
-                    label="系统名">
-            </el-table-column>
-            <el-table-column
-                    prop="name"
-                    label="主机名"
-                    width="180">
-            </el-table-column>
-            <el-table-column
-                    prop="cloud_area"
-                    label="云区域">
-            </el-table-column>
-            <el-table-column
-                    prop="mem"
-                    label="Mem(%)">
-            </el-table-column>
-            <el-table-column
-                    prop="disk"
-                    label="Disk(%)">
-            </el-table-column>
-            <el-table-column
-                    prop="cpu"
-                    label="Cpu(%)">
-            </el-table-column>
-            <el-table-column label="操作" width="400">
-                <template slot-scope="scope">
-                    <!--                    跳转方法1 -> @click绑定方法-->
-<!--                    window.location.href=site_url+'report/?id='+scope.row.id-->
-                    <el-button type="success" @click="getMonitor(scope.row)" size="small">
-                        查看性能
-                    </el-button>
-                    <!--                    跳转方法2 -> a标签href属性：-->
-                    <!--                    <el-button>-->
-                    <!--                        <el-link :href="'{{SITE_URL}}report/?id='+scope.row.id">-->
-                    <!--                            查看性能-->
-                    <!--                        </el-link>-->
-                    <!--                    </el-button>-->
-                    <el-button v-if="scope.row.is_monitor == '未监控'" type="primary" @click="addMonitor(scope.row)" size="small">
-                        加入监控
-                    </el-button>
-                     <el-button v-if="scope.row.is_monitor == '已监控'" @click="deleteMonitor(scope.row)" type="warning" size="small">取消监控</el-button>
-                    <el-button type="warning" @click="deleteData(scope.row)" size="small">
-                        删除
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-    </div>
-    <div>
-        <el-dialog
-                title="主机性能情况"
-                :visible.sync="chartVisible"
-                width="80%"
-                heigh="80%">
-            <div id="chartDemo" style="width: 600px;height:400px;"></div>
-        </el-dialog>
-    </div>
+    <el-row>
+        <el-col :span="20" :offset="2">
+            <el-row :gutter="40">
+                <el-col :span="2" :offset="22">
+                    <el-button id="addhost" @click="addHostDailog" type="primary">新增主机</el-button>
+                </el-col>
+            </el-row>
+            <el-row :gutter="40">
+                <el-form label-width="100px" v-model="searchHostForm">
+                    <el-form-item label="选择业务：">
+                        <el-select v-model="searchHostForm.biz" placeholder="请选择业务" style="width: 20%" clearable>
+                            <el-option v-for="item in bizList" :label="item.name"
+                                       :value="item.id + ':' +item.name"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+            </el-row>
+            <el-row :gutter="40">
+                <el-form label-width="100px">
+                    <el-form-item label="主机列表：">
+                        <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 6 }"
+                                  style="width: 40%"
+                                  v-model="searchHostForm.ip" placeholder="请输入主机IP(以分号隔开)：" clearable></el-input>
+                    </el-form-item>
+                </el-form>
+            </el-row>
+            <el-row :gutter="40">
+                <el-col :span="2" :offset="22">
+                    <el-button type="success" @click="getSearch">查询</el-button>
+                </el-col>
+            </el-row>
+            <el-row style="margin-top: 30px;">
+                <div id="table">
+                    <el-table
+                            :data="tableData"
+                            style="width: 100%"
+                            border>
+                        <el-table-column type="index" label="序号" width="60"></el-table-column>
+                        <el-table-column
+                                prop="ip"
+                                label="主机IP"
+                                width="180">
+                        </el-table-column>
+                        <el-table-column
+                                prop="os"
+                                label="系统名">
+                        </el-table-column>
+                        <el-table-column
+                                prop="name"
+                                label="主机名"
+                                width="180">
+                        </el-table-column>
+                        <el-table-column
+                                prop="cloud_area"
+                                label="云区域">
+                        </el-table-column>
+                        <el-table-column
+                                prop="mem"
+                                label="Mem(%)">
+                        </el-table-column>
+                        <el-table-column
+                                prop="disk"
+                                label="Disk(%)">
+                        </el-table-column>
+                        <el-table-column
+                                prop="cpu"
+                                label="Cpu(%)">
+                        </el-table-column>
+                        <el-table-column label="操作" width="400">
+                            <template slot-scope="scope">
+                                <!--                    跳转方法1 -> @click绑定方法-->
+                                <!--                    window.location.href=site_url+'report/?id='+scope.row.id-->
+                                <el-button type="success" @click="getMonitor(scope.row)" size="small">
+                                    查看性能
+                                </el-button>
+                                <!--                    跳转方法2 -> a标签href属性：-->
+                                <!--                    <el-button>-->
+                                <!--                        <el-link :href="'{{SITE_URL}}report/?id='+scope.row.id">-->
+                                <!--                            查看性能-->
+                                <!--                        </el-link>-->
+                                <!--                    </el-button>-->
+                                <el-button v-if="scope.row.is_monitor == '未监控'" type="primary"
+                                           @click="addMonitor(scope.row)" size="small">
+                                    加入监控
+                                </el-button>
+                                <el-button v-if="scope.row.is_monitor == '已监控'" @click="deleteMonitor(scope.row)"
+                                           type="warning" size="small">取消监控
+                                </el-button>
+                                <el-button type="warning" @click="deleteData(scope.row)" size="small">
+                                    删除
+                                </el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </el-row>
+        </el-col>
+    </el-row>
+    <el-dialog title="新增主机" :visible.sync="dialogVisible" width="60%">
+        <el-form :model="hostForm">
+            <el-form-item label="选择业务：">
+                <el-select v-model="hostForm.biz" placeholder="请选择" @change="searchSet">
+                    <el-option
+                            v-for="item in bizList"
+                            :label="item.name"
+                            :value="item.id + ':' + item.name">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="选择集群：">
+                <el-select v-model="hostForm.set" placeholder="请选择" @change="searchHost">
+                    <el-option v-for="item in setList" :label="item.bk_set_name" :value="item.bk_set_id + ':' + item.bk_set_name"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="选择主机：">
+                <el-select v-model="hostForm.innerip" placeholder="请选择">
+                    <el-option v-for="item in hostList" :label="item.innerip" :value="item.innerip"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item>
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="addData">确 定</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
 </div>
 <script>
     window.onload = function () {
@@ -171,7 +167,13 @@
             methods: {
                 getSearch() {
                     axios.post(site_url + 'get_search_host/' , this.searchHostForm).then(res => {
-                        this.tableData = res.data.data
+                        if (res.data.result) {
+                            this.$message({
+                                message: '查询成功',
+                                type: 'success'
+                            })
+                            this.tableData = res.data.data
+                        }
                     })
                 },
                 getBusiness() {

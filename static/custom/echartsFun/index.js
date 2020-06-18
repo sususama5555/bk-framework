@@ -2,7 +2,6 @@ function getToken() {
     let CSRFTokenLi = document.cookie.split('; ').find(v => v.match(/^csrftoken=([^;.]*).*$/))
     return CSRFTokenLi ? CSRFTokenLi.split('=')[1] : ''
 }
-
 /**
  *
  * @param {string} echarData.element - 生成echarts图表的标签ID
@@ -13,7 +12,7 @@ function getToken() {
 function echartFun(echarData) {
     let myChart = echarts.init(document.getElementById(echarData.element))
     let option = {}
-    if (echarData.type == 'pie') {
+    if(echarData.type == 'pie') {
         let legendData = []
         echarData.data.forEach(val => {
             legendData.push(val.name)
@@ -46,22 +45,23 @@ function echartFun(echarData) {
                     radius: ['25%', '75'], //饼图大小 0 - 100
                     center: ['50%', '60%'], //饼图对应整个标签的位置 [X, Y]
                     label: { //饼图图形上的文本标签
-                        normal: {
-                            show: true, //是否显示文本标签
-                            formatter: '{c}', // 文本标签的内容
+                            normal: {
+                                show: true, //是否显示文本标签
+                                formatter: '{c}', // 文本标签的内容
+                            },
                         },
-                    },
                     data: echarData.data, // 饼图的具体数据
                 }
             ]
         };
-    } else if (echarData.type == 'line') {
-        let series = [];
+    } else {
+        
+        let series = []
         // 定义图形的显示格式
-        if (echarData.dataY[0].constructor == Array) {
+        if(echarData.dataY[0].constructor == Array) {
 
             console.log(echarData.dataY);
-
+            
             echarData.dataY.map((v, i) => {
                 console.log(v);
                 series[i] = {}
@@ -102,9 +102,9 @@ function echartFun(echarData) {
                 type: 'category',
                 data: echarData.dataX,
                 // axisLabel: {
-                // interval: 0,// 强制显示所有x值不写会自动隐藏
-                // rotate: 50,  //倾斜50度
-                // fontSize: 11 //字体大小
+                    // interval: 0,// 强制显示所有x值不写会自动隐藏
+                    // rotate: 50,  //倾斜50度
+                    // fontSize: 11 //字体大小
                 // }
             },
             yAxis: {
@@ -112,42 +112,13 @@ function echartFun(echarData) {
             },
             series: series
         };
-    } else if (echarData.type == 'bar') {
-        option = {
-            title: {
-                text: echarData.title,
-                x: 'center'
-            },
-            xAxis: {
-                type: 'category',
-                data: echarData.data_x    //['Mon', 'Tue', 'Wed']
-            },
-            yAxis: {
-                type: 'value'
-            },
-            series: [{
-                data: echarData.data_s,    //[120, 200, 150]
-                type: 'bar'
-            }]
-        };
-    } else if (echarData.type == 'bar1') {
-        option = {
-            legend: {},
-            tooltip: {},
-            dataset: {
-                source: echarData.data_x
-            },
-            xAxis: {type: 'category'},
-            yAxis: {},
-            series: echarData.data_s,
-        };
     }
     myChart.setOption(option);
 };
 
-function exportCSV({tableLable = [], tableData = [], fileUrl = '未命名'}) {
-    fileUrl += '.csv';
-    let addobj = {};
+function exportCSV({tableLable = [], tableData = [], fileUrl = '未命名'}){
+    fileUrl += '.csv'
+    let addobj = {}
     // 2.1获取表头内容 以rowData形式重新赋值
     try {
         tableLable.map((v, i) => {
@@ -164,8 +135,8 @@ function exportCSV({tableLable = [], tableData = [], fileUrl = '未命名'}) {
     // 2.4列标题，逗号隔开，每一个逗号就是隔开一个单元格
     let str = ``;
     // 2.5增加\t为了不让表格显示科学计数法或者其他格式
-    for (let i = 0; i < tableData2.length; i++) {
-        for (let item in tableData2[i]) {
+    for(let i = 0; i < tableData2.length; i++) {
+        for(let item in tableData2[i]) {
             // 2.5.1 注意要将本身就有换行或者英文逗号的内容进行变换 否则表格内容会错乱
             tableData2[i][item] = tableData2[i][item].replace(/\n/g, ' ')
             tableData2[i][item] = tableData2[i][item].replace(/,/g, '，') // 英文替换为中文
