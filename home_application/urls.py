@@ -21,7 +21,7 @@ urlpatterns = (
     # 业务urls
     url(r'^get_biz_topo/$', views.get_biz_topo),
     url(r'^get_topo_host/$', views.get_topo_host),
-    # url(r'^search_biz/$', views.search_biz),
+    url(r'^search_biz/$', views.search_biz),
     # url(r'^search_host/$', views.search_host),
     # url(r'^add_host/$', views.add_host),
     url(r'^init_host_table/$', views.init_host_table),
@@ -69,7 +69,7 @@ urlpatterns = (
     url(r'^report/$', host_and_monitor_views.report),
 
     url(r'^api/test/$', host_and_monitor_views.api_test),
-    url(r'^search_biz/$', host_and_monitor_views.search_biz),
+    # url(r'^search_biz/$', host_and_monitor_views.search_biz),
     url(r'^search_set/$', host_and_monitor_views.search_set),
     url(r'^search_host/$', host_and_monitor_views.search_host),
     url(r'^add_host/$', host_and_monitor_views.add_host),

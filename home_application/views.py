@@ -82,7 +82,8 @@ def connect_bak(request):
 def get_biz_topo(request):
     biz_info = request.GET.get("biz", 2)
     bk_biz_id = biz_info.split(":")[0]
-    client = get_client_by_user("admin")
+    # client = get_client_by_user("admin")
+    client = get_client_by_request(request)
     topo_data = client.cc.search_biz_inst_topo(**{"bk_biz_id": bk_biz_id})
     topo_list = topo_data["data"]
     topo_list_build = str(topo_list).replace("bk_inst_name", "label").replace("child", "children")
@@ -92,7 +93,8 @@ def get_biz_topo(request):
 def get_topo_host(request):
     """根据拓扑节点获取主机"""
     params = json.loads(request.body)
-    client = get_client_by_user("admin")
+    # client = get_client_by_user("admin")
+    client = get_client_by_request(request)
     kwargs = {
         "condition": [
             {
@@ -121,12 +123,13 @@ def get_topo_host(request):
 def search_biz(request):
     # 查询业务
     biz_list = []
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     biz_result = client.cc.search_business()
     for biz in biz_result["data"]["info"]:
         biz_list.append({"id": biz["bk_biz_id"], "name": biz["bk_biz_name"]})
 
-    return JsonResponse({"data": biz_list})
+    return JsonResponse({"result": True, "data": biz_list})
 
 
 
@@ -134,7 +137,8 @@ def search_host(request):
     # 查询主机
     biz_id = request.GET["biz"].split(":")[0]
     host_list = []
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     params = {
         "bk_biz_id": int(biz_id)
     }
@@ -152,7 +156,8 @@ def add_host(request):
     business = params["biz"]
     if HostInfo.objects.filter(ip=innerip).exists():
         return JsonResponse({"result": False, "data": "请勿重复添加".format(innerip)})
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     params = {
         "ip": {
             "data": [innerip],
@@ -250,7 +255,8 @@ def search_file(request):
         "script_content": script_content,
         "account": "root",
     }
-    client = get_client_by_user("admin")
+    # client = get_client_by_user("admin")
+    client = get_client_by_request(request)
     data = client.job.fast_execute_script(**kwargs)
     job_instance_id = data["data"]["job_instance_id"]
 
@@ -330,7 +336,8 @@ def back_up(request):
         "account": "root",
         "script_param": script_param,
     }
-    client = get_client_by_user("admin")
+    # client = get_client_by_user("admin")
+    client = get_client_by_request(request)
     tar_result = client.job.fast_execute_script(**kwargs)
 
     # 获取脚本执行日志

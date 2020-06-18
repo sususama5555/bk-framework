@@ -194,7 +194,7 @@
                 searchHost() {
                     console.log(this.hostForm.biz)
                     let params = {
-                        "set": this.hostForm.biz
+                        "set": this.hostForm.set
                     }
                     axios.get(site_url + 'search_host/', {params: params}).then(res => {
                         this.hostList = res.data.data

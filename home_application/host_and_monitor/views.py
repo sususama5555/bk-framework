@@ -57,30 +57,32 @@ def api_test(request):
 def search_biz(request):
     # 查询业务
     biz_list = []
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     biz_result = client.cc.search_business()
     for biz in biz_result["data"]["info"]:
         biz_list.append({"id": biz["bk_biz_id"], "name": biz["bk_biz_name"]})
 
-    return JsonResponse({"data": biz_list})
+    return JsonResponse({"result": True, "data": biz_list})
 
 
 def search_set(request):
 
     biz_id = request.GET["biz"].split(":")[0]
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     set_result = client.cc.search_set({"bk_biz_id": biz_id})
 
     data = [{"bk_set_name": i.get("bk_set_name"), "bk_set_id": i.get("bk_set_id")} for i in set_result["data"]["info"]]
-    return JsonResponse({"data": data})
-
+    return JsonResponse({"result": True, "data": data})
 
 
 def search_host(request):
     # 查询主机
     set_id = request.GET["set"].split(":")[0]
     host_list = []
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     params = {
         "bk_set_id": int(set_id)
     }
@@ -88,7 +90,7 @@ def search_host(request):
     for biz in host_result["data"]["info"]:
         host_list.append({"id": biz["host"]["bk_host_id"], "innerip": biz["host"]["bk_host_innerip"]})
 
-    return JsonResponse({"data": host_list})
+    return JsonResponse({"result": True, "data": host_list})
 
 
 def add_host(request):
@@ -97,7 +99,8 @@ def add_host(request):
     business = params["biz"]
     if HostInfo.objects.filter(ip=innerip).exists():
         return JsonResponse({"result": False, "data": "请勿重复添加".format(innerip)})
-    client = get_client_by_user('admin')
+    # client = get_client_by_user('admin')
+    client = get_client_by_request(request)
     params = {
         "ip": {
             "data": [innerip],
@@ -155,7 +158,8 @@ def get_host_monitor(request):
         "script_content": script_content,
         "account": "root",
     }
-    client = get_client_by_user("admin")
+    # client = get_client_by_user("admin")
+    client = get_client_by_request(request)
     data = client.job.fast_execute_script(**kwargs)
     job_instance_id = data["data"]["job_instance_id"]
 

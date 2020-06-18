@@ -15,8 +15,8 @@
                     <el-form-item label="任务名称：">
                         <el-select v-model="topoForm.biz" placeholder="请选择业务" style="width: 100%"
                                    @change="presentTopo(topoForm)">
-                            <el-option v-for="item in bkBizData" :label="item.bk_biz_name"
-                                       :value="item.bk_biz_id + ':' + item.bk_biz_name"></el-option>
+                            <el-option v-for="item in bkBizData" :label="item.name"
+                                       :value="item.id + ':' + item.name"></el-option>
                         </el-select>
                     </el-form-item>
                     <el-form-item label="业务拓扑：">
@@ -142,7 +142,7 @@
             },
             methods: {
                 getBisiness() {
-                    axios.get(site_url + 'get_biz_list/').then(res => {
+                    axios.get(site_url + 'search_biz/').then(res => {
                         if (res.data.result) {
                             this.bkBizData = res.data.data
                         }
