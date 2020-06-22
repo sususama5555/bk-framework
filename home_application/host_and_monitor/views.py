@@ -78,17 +78,29 @@ def search_set(request):
 
 
 def search_host(request):
-    # 查询主机
-    set_id = request.GET["set"].split(":")[0]
-    host_list = []
+    # 根据集群查询主机
+    set_id = int(request.GET["set"].split(":")[0])
     # client = get_client_by_user('admin')
     client = get_client_by_request(request)
-    params = {
-        "bk_set_id": int(set_id)
+    kwargs = {
+        "condition": [
+            {
+                "bk_obj_id": "set",
+                "fields": [],
+                "condition": [
+                    {
+                        "field": "bk_set_id",
+                        "operator": "$eq",
+                        "value": set_id
+                    }
+                ]
+            }
+        ]
     }
-    host_result = client.cc.search_host(**params)
-    for biz in host_result["data"]["info"]:
-        host_list.append({"id": biz["host"]["bk_host_id"], "innerip": biz["host"]["bk_host_innerip"]})
+    host_result = client.cc.search_host(**kwargs)
+    host_list = [{"id": biz["host"]["bk_host_id"], "innerip": biz["host"]["bk_host_innerip"]} for biz in host_result["data"]["info"]]
+    # for biz in host_result["data"]["info"]:
+    #     host_list.append({"id": biz["host"]["bk_host_id"], "innerip": biz["host"]["bk_host_innerip"]})
 
     return JsonResponse({"result": True, "data": host_list})
 

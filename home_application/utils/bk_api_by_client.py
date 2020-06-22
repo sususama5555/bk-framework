@@ -371,13 +371,13 @@ def job_change_cron_status(request):
 
 
 # 获取所有业务,测试OK
-def cc_search_business(fields=[]):
+def cc_search_business(request, fields=[]):
     """
     获取业务列表
     :param request:
     :return:
     """
-    client = get_client_by_user("admin")
+    client = get_client_by_request(request)
     params = {'fields': fields}
     res = client.cc.search_business(**params)
     if res.get('code') == 0:

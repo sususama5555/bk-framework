@@ -12,16 +12,17 @@
         <el-container>
             <el-aside width="300px">
                 <el-form ref="addForm" :model="topoForm" label-width="100px">
-                    <el-form-item label="任务名称：">
+                    <el-form-item label="业务名称：">
                         <el-select v-model="topoForm.biz" placeholder="请选择业务" style="width: 100%"
                                    @change="presentTopo(topoForm)">
-                            <el-option v-for="item in bkBizData" :label="item.name"
-                                       :value="item.id + ':' + item.name"></el-option>
+                            <el-option v-for="item in bkBizData" :label="item.name" :value="item.id + ':' + item.name"></el-option>
                         </el-select>
                     </el-form-item>
                     <el-form-item label="业务拓扑：">
-                        <el-tree :data="topoData" class="tree" node-key="bk_inst_id"
-                                 @node-click="topoClick"></el-tree>
+<!--                        单选tree-->
+                        <!--                        <el-tree :data="topoData" class="tree" node-key="bk_inst_id" @node-click="topoClick" :props="defaultProps"></el-tree>-->
+<!--                        复选tree-->
+                        <el-tree :data="topoData" class="tree" node-key="bk_inst_id" @check="topoClick" :props="defaultProps" show-checkbox></el-tree>
                     </el-form-item>
                 </el-form>
             </el-aside>
@@ -53,7 +54,7 @@
                     </el-col>
                     <el-col :span="8">
                         <div>
-                            <span>文件后缀：</span>
+                            <span>文件名：</span>
                         </div>
                         <el-input
                                 placeholder="请输入后缀"
@@ -118,8 +119,8 @@
                 return {
                     topoData: [],
                     defaultProps: {
-                        children: 'children',
-                        label: 'label'
+                        children: 'child',
+                        label: 'bk_inst_name'
                     },
                     topoForm: {},
                     hostSpan: '',
@@ -148,20 +149,21 @@
                         }
                     })
                 },
-                topoClick(data) {
+                presentTopo(topoForm) {
+                    axios.get('{{ SITE_URL }}get_biz_topo/', {params: topoForm}).then(res => {
+                        if (res.data.result) {
+                            this.topoData = res.data.data
+                            console.log(this.topoData)
+                        }
+                    })
+                },
+                topoClick(_, data) {
                     this.ipLoading = true
-                    axios.post('{{ SITE_URL }}get_topo_host/', data).then(res => {
+                    axios.post('{{ SITE_URL }}get_checked_topo_host/', data).then(res => {
                         if (res.data.result) {
                             this.hostArea = res.data.data
                             console.log(this.hostArea)
                             this.ipLoading = false
-                        }
-                    })
-                },
-                presentTopo(topoForm) {
-                    axios.get('{{ SITE_URL }}get_biz_topo/', {params: topoForm}).then(res => {
-                        if (res.data.result === true) {
-                            this.topoData = res.data.data
                         }
                     })
                 },
@@ -194,9 +196,8 @@
                     axios.post(site_url + 'back_up/', params).then(res => {
                         if (res.data.result) {
                             this.$message.success(res.data.data)
-                        } else {
-                            this.backupLoading = false
                         }
+                        this.backupLoading = false
                     })
                 }
             }

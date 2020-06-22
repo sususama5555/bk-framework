@@ -33,26 +33,23 @@ def get_env_or_raise(key):
 # SECRET_KEY = '066d5f95-b630-4449-ae67-22c9524efcbe'
 
 # zw模拟考
-
 # APP_CODE = 'spr-exam'
-# # 应用用于调用云 API 的 Secret
 # SECRET_KEY = '88815d10-f829-4b41-a5a2-1fb035a3634b'
 
 # cw模拟考
-# APP_CODE = 'shupeiran'
-# # 应用用于调用云 API 的 Secret
-# SECRET_KEY = '5fe835c5-6d2d-49dd-bf40-afa639ba45cb'
+APP_CODE = 'shupeiran'
+SECRET_KEY = '32cb2f3a-8982-4ec2-8335-7e366961331c'
 
 # bkds_test
-APP_CODE = 'sapphire'
-# 应用用于调用云 API 的 Secret
-SECRET_KEY = '7e4d1e81-8216-4b93-af0c-39c32afabdbb'
+# APP_CODE = 'sapphire'
+# SECRET_KEY = '7e4d1e81-8216-4b93-af0c-39c32afabdbb'
 
 # SaaS运行版本，如非必要请勿修改
 RUN_VER = 'open'
 # 蓝鲸SaaS平台URL，例如 http://paas.bking.com
-# BK_URL = 'http://paas.zw.com'
-BK_URL = 'https://paas.exam.bktencent.com'
+BK_URL = 'http://paas.cwtest.com'
+BK_JOB_URL = 'http://job.cwtest.com'
+# BK_URL = 'https://paas.exam.bktencent.com'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(
