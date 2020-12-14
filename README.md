@@ -1,6 +1,6 @@
 # :wrench: 前言
 
-基于蓝鲸开发框架2.0，开发了集成三种功能的SaaS	~~（为考试做准备）~~
+基于蓝鲸开发框架2.0，适配简单运维场景，开发集成三种功能的SaaS	~~（为考试做准备）~~
 
 蓝鲸开发框架2.0使用说明：https://docs.bk.tencent.com/blueapps/USAGE.html
 
