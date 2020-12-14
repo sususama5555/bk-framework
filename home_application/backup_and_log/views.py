@@ -245,8 +245,8 @@ def back_up(request):
         "account": "root",
         "script_param": script_param,
     }
-    # client = get_client_by_user("admin")
-    client = get_client_by_request(request)
+    client = get_client_by_user("admin")
+    # client = get_client_by_request(request)
     tar_result = client.job.fast_execute_script(**kwargs)
 
     # 获取脚本执行日志

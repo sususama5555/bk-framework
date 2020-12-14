@@ -37,8 +37,8 @@ def get_env_or_raise(key):
 # SECRET_KEY = '88815d10-f829-4b41-a5a2-1fb035a3634b'
 
 # cw模拟考
-APP_CODE = 'shupeiran'
-SECRET_KEY = '32cb2f3a-8982-4ec2-8335-7e366961331c'
+APP_CODE = 'python3-vue_saas'
+SECRET_KEY = 'd25b9b5c-2e23-41c3-b46e-50fb4e0139cb'
 
 # bkds_test
 # APP_CODE = 'sapphire'
@@ -47,7 +47,7 @@ SECRET_KEY = '32cb2f3a-8982-4ec2-8335-7e366961331c'
 # SaaS运行版本，如非必要请勿修改
 RUN_VER = 'open'
 # 蓝鲸SaaS平台URL，例如 http://paas.bking.com
-BK_URL = 'http://paas.cwtest.com'
+BK_URL = 'http://bkdev-paas.canway.net:8080/'
 BK_JOB_URL = 'http://job.cwtest.com'
 # BK_URL = 'https://paas.exam.bktencent.com'
 

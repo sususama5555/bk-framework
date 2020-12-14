@@ -1,7 +1,7 @@
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'spr-exam-0606',
+        'NAME': 'bk-framework',
         'USER': 'root',
         'PASSWORD': 'spr2012317',
         'HOST': 'localhost',

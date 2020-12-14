@@ -27,7 +27,7 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'framework_py',
+        'NAME': 'bk-framework',
         'USER': 'root',
         'PASSWORD': 'spr2012317',
         'HOST': 'localhost',

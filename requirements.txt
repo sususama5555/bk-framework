@@ -17,3 +17,6 @@ six==1.11.0
 
 #v2 requirement
 httplib2==0.9.1
+
+# excel
+xlrd==2.0.1
