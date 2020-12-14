@@ -26,26 +26,26 @@
 
 2.主机路径选择，文件搜索与 备份
 
-![文件搜索与备份](README\backup-1.png)
+![文件搜索与备份](https://github.com/sususama5555/bk-framework/blob/master/README/backup-1.png)
 
 ## 主机性能监控：
 
 1.主机选择，实时数据，性能监控
 
-![主机选择，实时数据，性能监控](README\monitor-1.png)
+![主机选择，实时数据，性能监控](https://github.com/sususama5555/bk-framework/blob/master/README/monitor-1.png)
 
 ## 模板与任务:
 
 1.添加模板，表格导入
 
-![添加模板，表格导入](README\task-2.png)
+![添加模板，表格导入](https://github.com/sususama5555/bk-framework/blob/master/README/task-2.png)
 
 2.基于模板创建任务
 
-![基于模板创建任务](README\task-4.png)
+![基于模板创建任务](https://github.com/sususama5555/bk-framework/blob/master/README/task-4.png)
 
 3.任务流水线
 
-![任务流水线](README\task-3.png)
+![任务流水线](https://github.com/sususama5555/bk-framework/blob/master/README/task-3.png)
 
 
